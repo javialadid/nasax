@@ -27,3 +27,4 @@ Thumbs.db
 
 # Optional: ignore package-lock backup in node_modules
 node_modules/.package-lock.json 
+.vercel

@@ -1,7 +1,7 @@
 import cors, {CorsOptions} from 'cors';
 
 const allowedOrigins = process.env.NODE_ENV === "production"
-	? process.env.ORIGINGS?.split(',') || ['*']
+	? process.env.ORIGINS?.split(',') || ['*']
 	: ['*']
 const corsOptions: CorsOptions = {
 	origin: (origin, callback) => {
