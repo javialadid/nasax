@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg: #ffffff;
+  --color-text: #18181b;
+}
+
+.dark {
+  --color-bg: black;
+  --color-text: #f4f4f5;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+
+/* In your CSS (e.g., index.css or App.css) */
+.horizon-gradient {
+  background: linear-gradient(
+    to bottom,
+    #181c2f 0%,
+    #181c2f 85%,
+    rgba(24, 28, 47, 0) 100%
+  );
+}
+.card {
+  box-shadow: -6px 7px 7px #ffffff0f ;
+  transition: transform 0.6s cubic-bezier(0.4,0.2,0.2,1), box-shadow 0.6s cubic-bezier(0.4,0.2,0.2,1);
+  transition-delay: 0s, 0s;
+}
+.card:hover, .card:focus {
+  transform: scale(1.12);
+  box-shadow: 12px 16px 32px #00000033, 0 4px 32px #00000022;
+  z-index: 2;
+  transition-delay: 0.8s;
+}
