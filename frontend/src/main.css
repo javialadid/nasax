@@ -36,3 +36,7 @@ body {
   z-index: 2;
   transition-delay: 0.8s;
 }
+.picture-shadow {
+  box-shadow: 0px -2px 25px #ffffff77;
+  border-radius: 25px;
+}

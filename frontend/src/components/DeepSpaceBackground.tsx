@@ -30,7 +30,7 @@ const DeepSpaceBackground: React.FC = () => (
       .deepspace-bg {
         position: fixed;
         inset: 0;
-        z-index: 0;
+        z-index: -1;
         pointer-events: none;
         background: radial-gradient(ellipse at 60% 40%, #0a0e1a 0%, #01020a 80%, #000 100%);
         overflow: hidden;

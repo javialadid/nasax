@@ -14,7 +14,7 @@ export function useNasaApi(endpoint: string, params: Record<string, string> = {}
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  useEffect(() => {    
     setLoading(true);
     setError(null);
     const baseUrl = (import.meta as unknown as ImportMeta).env.VITE_API_BASE_URL || 'http://localhost:3000';

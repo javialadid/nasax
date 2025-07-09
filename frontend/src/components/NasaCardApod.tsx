@@ -1,36 +1,71 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getApiBaseUrl } from '../utils/env';
-import { getEasternDateString } from '../utils/dateutil'; // extracted helper
-import Card from './Card';
-import FullscreenModal from './FullscreenModal';
+import { getEasternDateString } from '../utils/dateutil';
+import { firstSentence } from '../utils/stringutil';
+
+const DEFAULT_IMAGE = '/default-apod.png'; // Place a default image in public/
+const DEFAULT_TITLE = 'Astronomy Picture of the Day';
+
+const CARD_IMG_WIDTH = 400;
+const CARD_IMG_HEIGHT = 300;
 
 const NasaCardApod: React.FC = () => {
   const [data, setData] = useState<any>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const date = getEasternDateString();
-      const res = await fetch(`${getApiBaseUrl()}/api/planetary/apod?date=${date}`);
-      const json = await res.json();
-      setData(json);
+      try {
+        //await new Promise(res => setTimeout(res, 1000)); // <-- comment out to disable delay
+        const date = getEasternDateString();
+        const res = await fetch(`${getApiBaseUrl()}/api/planetary/apod?date=${date}`);
+        const json = await res.json();
+        setData(json);
+      } catch (e) {
+        // fail silently, keep default
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);
 
-  if (!data) {
-    return (
-      <div className="aspect-[4/3] w-full flex items-center justify-center bg-white/10 rounded-xl text-2xl">
-        Loading...
-      </div>
-    );
-  }
+  // Prefer the smallest available image for the card
+  const image = data && data.url ? data.url : DEFAULT_IMAGE;
+  const apiTitle = data && data.title ? data.title : '';
+  const apiExplanation = data && data.explanation ? firstSentence(data.explanation) : '';
 
   return (
-    <>
-      {!isOpen && <Card data={data} onClick={() => setIsOpen(true)} /> }
-      {isOpen && <FullscreenModal data={data} onClose={() => setIsOpen(false)} />}
-    </>
+    <Link to="/apod" style={{ textDecoration: 'none' }}>
+      <div
+        className="card relative aspect-[4/3] w-full border-1 border-gray-500 rounded-xl overflow-hidden cursor-pointer shadow-lg group"
+        tabIndex={0}
+        role="button"
+        aria-label={DEFAULT_TITLE}
+        style={{ boxShadow: "-6px 7px 7px #ffffff0f" }}
+      >
+        <img
+          src={image}
+          alt={DEFAULT_TITLE}
+          width={CARD_IMG_WIDTH}
+          height={CARD_IMG_HEIGHT}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+        />
+        {/* Always show the default title at the top */}
+        <div className="absolute top-0 left-0 w-full bg-black/60 text-white text-lg font-semibold px-3 py-2 text-center truncate z-10">
+          {DEFAULT_TITLE}
+        </div>
+        {/* When data is loaded, show API title and first sentence at the bottom */}
+        {data && (
+          <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">
+            <div className="font-semibold text-base truncate">{apiTitle}</div>
+            <div className="text-xs text-gray-300 mt-1">{apiExplanation}</div>
+          </div>
+        )}
+      </div>
+    </Link>
   );
 };
 

@@ -4,24 +4,27 @@ import { PhotoProvider } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
 import DeepSpaceBackground from './components/DeepSpaceBackground';
 import NasaCard from './components/NasaCard';
-import NasaCardGdacs from './components/NasaCardGdacs';
+import { Routes, Route, Link } from 'react-router-dom';
+import ApodView from './components/ApodView';
 const logo = '/logo-nasax2_192.png';
 
 function App() {
   return (
     <PhotoProvider maskOpacity={0.95}>
       <DeepSpaceBackground />
-      <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+      <div className="min-h-screen  text-[var(--color-text)] z-10">
         {/* Top Pane */}
         <nav className="w-full h-14 flex items-center justify-between px-6 horizon-gradient bg-[#181c2f]/90 z-10 shadow-md" style={{backdropFilter: 'blur(2px)'}}>
           <div className="flex items-center gap-3 h-full">
-          <img
-            src={logo}
-            alt="NasaX"
-            className="h-16 object-contain"
-            style={{ minWidth: 92 }}
-          />
-            <span className="text-xl font-bold tracking-wide">NasaX</span>
+            <Link to="/" className="flex items-center gap-3 h-full focus:outline-none">
+              <img
+                src={logo}
+                alt="NasaX"
+                className="h-16 object-contain"
+                style={{ minWidth: 92 }}
+              />
+              <span className="text-xl font-bold tracking-wide">NasaX</span>
+            </Link>
           </div>
           <div className="flex items-center gap-4">
             {/* Dropdown menus will go here */}
@@ -36,14 +39,18 @@ function App() {
           </div>
         </nav>
         {/* Main Content */}
-        <main className="flex flex-col items-center justify-center pt-8 px-2 sm:px-6 md:px-12 w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl" style={{ minHeight: '80vh' }}>
-            
-              <NasaCardApod/>
-              <NasaCard endpoint="" />
-              
-            
-          </div>
+        <main className="flex flex-col items-center justify-center pt-1 px-2 sm:px-6 md:px-12 w-full">
+          <Routes>
+            <Route path="/" element={
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl" 
+              style={{ minHeight: '90vh' }}>
+                <NasaCardApod/>
+                <NasaCard endpoint="" />
+                
+              </div>
+            } />
+            <Route path="/apod" element={<ApodView />} />
+          </Routes>
         </main>
       </div>
     </PhotoProvider>
