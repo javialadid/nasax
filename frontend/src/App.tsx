@@ -1,20 +1,25 @@
-import React from 'react';
+
 import NasaCardApod from './components/NasaCardApod';
-import { PhotoProvider } from 'react-photo-view';
-import 'react-photo-view/dist/react-photo-view.css';
 import DeepSpaceBackground from './components/DeepSpaceBackground';
 import NasaCard from './components/NasaCard';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import ApodView from './components/ApodView';
 const logo = '/logo-nasax2_192.png';
 
 function App() {
-  return (
-    <PhotoProvider maskOpacity={0.95}>
+  const location = useLocation();
+  function getNavLabel(pathname: string) {
+    if (pathname === '/apod') return 'Astronomy Picture of the Day';
+    if (pathname === '/') return 'Home';
+    // Add more routes as needed
+    return '';
+  }
+  return (    
+    <>
       <DeepSpaceBackground />
       <div className="min-h-screen  text-[var(--color-text)] z-10">
         {/* Top Pane */}
-        <nav className="w-full h-14 flex items-center justify-between px-6 horizon-gradient bg-[#181c2f]/90 z-10 shadow-md" style={{backdropFilter: 'blur(2px)'}}>
+        <nav className="w-full h-14 flex items-center justify-between px-6 horizon-gradient bg-[#181c2f]/90 z-10 shadow-md relative" style={{backdropFilter: 'blur(2px)'}}>
           <div className="flex items-center gap-3 h-full">
             <Link to="/" className="flex items-center gap-3 h-full focus:outline-none">
               <img
@@ -26,16 +31,19 @@ function App() {
               <span className="text-xl font-bold tracking-wide">NasaX</span>
             </Link>
           </div>
+          {/* Centered navigation context */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+            <span className="text-lg font-semibold text-white/90" style={{ color: 'bisque' }}
+            >{getNavLabel(location.pathname)}</span>
+          </div>
           <div className="flex items-center gap-4">
             {/* Dropdown menus will go here */}
             <div className="w-24 h-8 bg-gray-700/30 rounded text-sm flex items-center justify-center text-gray-300 
               cursor-pointer">
-              Menu 1
-            </div>
-            <div className="w-24 h-8 bg-gray-700/30 rounded text-sm flex items-center justify-center text-gray-300 
-              cursor-pointer">
-              Menu 2
-            </div>
+                <Link to="/" className="flex items-center gap-3 h-full focus:outline-none">
+              Home
+              </Link>
+            </div>            
           </div>
         </nav>
         {/* Main Content */}
@@ -52,8 +60,8 @@ function App() {
             <Route path="/apod" element={<ApodView />} />
           </Routes>
         </main>
-      </div>
-    </PhotoProvider>
+      </div>    
+    </>
   );
 }
 

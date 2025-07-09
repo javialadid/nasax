@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNasaApi } from '../hooks/useNasaApi';
 import Explanation from './Explanation';
 import { getEasternDateString, formatDateString, clampDateToRange, daysBetween, addDays } from '../utils/dateutil';
 import { useSearchParams } from 'react-router-dom';
 import SpinnerOverlay from './SpinnerOverlay';
 import FadeTransition from './FadeTransition';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
-const MAX_DAYS_BACK = 7;
+const MAX_DAYS_BACK = parseInt(import.meta.env.VITE_APOD_MAX_DAYS_BACK || '7');
 
 const ApodView: React.FC = () => {
   const today = getEasternDateString();
@@ -29,12 +30,39 @@ const ApodView: React.FC = () => {
     return () => timeout && clearTimeout(timeout);
   }, [loading, data]);
 
+  const [notification, setNotification] = useState<string | null>(null);
+  const lastClampedRef = useRef<string | null>(null);
+
+  // Helper to show notification only if not already shown for this clamped date
+  const showClampNotification = (clamped: string) => {
+    if (lastClampedRef.current !== clamped) {
+      if (clamped === oldestAllowed) {
+        setNotification(`Requested date is too old. Showing earliest available date (${formatDateString(clamped)}).`);
+      } else if (clamped === today) {
+        setNotification(`Requested date is in the future. Showing today (${formatDateString(clamped)}).`);
+      }
+      lastClampedRef.current = clamped;
+      setTimeout(() => setNotification(null), 5000);
+    }
+  };
+
+  // Initial mount: clamp and notify if needed
+  useEffect(() => {
+    const initial = searchParams.get('date') || today;
+    const clamped = clampDateToRange(initial, oldestAllowed, today);
+    if (clamped !== initial) {
+      showClampNotification(clamped);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Keep currentDate and query string in sync, always clamped
   useEffect(() => {
     const clamped = clampDateToRange(currentDate, oldestAllowed, today);
     if (clamped !== currentDate) {
       setCurrentDate(clamped);
       setSearchParams({ date: clamped });
+      showClampNotification(clamped);
     } else if (clamped !== searchParams.get('date')) {
       setSearchParams({ date: clamped });
     }
@@ -48,6 +76,7 @@ const ApodView: React.FC = () => {
       const clamped = clampDateToRange(urlDate, oldestAllowed, today);
       if (clamped !== currentDate) {
         setCurrentDate(clamped);
+        showClampNotification(clamped);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -59,6 +88,8 @@ const ApodView: React.FC = () => {
   const daysBack = daysBetween(today, currentDate);
   const canGoPrev = daysBack < MAX_DAYS_BACK;
   const canGoNext = currentDate !== today;
+
+  const [showZoomModal, setShowZoomModal] = useState(false);
 
   if (loading && !data) {
     return (
@@ -102,20 +133,35 @@ const ApodView: React.FC = () => {
   const renderApodContent = (apod: any, date: string) => (
     <div className="absolute inset-0 w-full h-full">
       <div className="w-full flex flex-col items-center justify-center bg-transparent px-0 pt-0 pb-0" style={{ minHeight: 0 }}>
-        <div className="flex flex-row items-center justify-center w-full gap-2">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center break-words m-0 text-white" style={{ marginTop: 0 }}>
+        <div className="flex flex-row items-center w-full gap-2">
+          <div className="flex-1" />
+          <h2
+            className="text-2xl sm:text-3xl font-bold text-center break-words m-0"            
+          >
             {apod.title}
           </h2>
-          <span className="text-xs text-gray-300 ml-3 whitespace-nowrap">{formatDateString(date)}</span>
+          <span className="flex-1 text-sm text-gray-300 ml-3 whitespace-nowrap text-left">
+            {formatDateString(date)}
+          </span>
         </div>
       </div>
-      <div className="w-full flex-shrink-0 flex items-center justify-center min-h-[50vh] relative" style={{ minHeight: '50vh' }}>
-        <img
-          src={apod.hdurl || apod.url}
-          alt={apod.title}
-          className="object-contain mx-6 my-4 picture-shadow"
-          style={{ background: 'transparent', border: 'none', padding: 0, height: '50vh', maxHeight: '50vh' }}
-        />
+      <div className="w-full flex-shrink-0 flex flex-col items-center justify-center min-h-[50vh] relative" style={{ minHeight: '50vh' }}>
+        <div className="relative w-full flex items-center justify-center" style={{ minHeight: '50vh' }}>
+          <img
+            src={apod.hdurl || apod.url}
+            alt={apod.title}
+            className={`object-contain mx-6 my-4 picture-shadow select-none${(apod.hdurl || apod.url) ? ' cursor-zoom-in' : ''}`}
+            style={{ background: 'transparent', border: 'none', padding: 0, height: '50vh', maxHeight: '50vh' }}
+            draggable={false}
+            onClick={() => (apod.hdurl || apod.url) && setShowZoomModal(true)}
+            aria-label="View full size image"
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => {
+              if ((apod.hdurl || apod.url) && (e.key === 'Enter' || e.key === ' ')) setShowZoomModal(true);
+            }}
+          />
+        </div>
       </div>
       <div className="w-full max-h-[40vh] overflow-y-auto">
         <Explanation text={apod.explanation} />
@@ -125,12 +171,43 @@ const ApodView: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full overflow-hidden relative min-h-[90vh]">
+      {notification && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-4 py-2 
+          rounded shadow z-50 text-center text-xl">
+          {notification}
+        </div>
+      )}
       {/* Spinner overlay if loading and data is present, with delay */}
       {showSpinner && loading && data && <SpinnerOverlay />}
       {/* APOD content with fade-in on date change */}
       <FadeTransition key={currentDate} durationMs={1500}>
         {renderApodContent(data, currentDate)}
       </FadeTransition>
+      {/* Zoom Modal */}
+      {showZoomModal && (
+        <div className="fixed left-0 right-0 bottom-0 top-14 z-40 flex items-center justify-center bg-black bg-opacity-95">
+          <button
+            className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-blue-400 opacity-60 hover:opacity-100 transition-opacity z-50"
+            onClick={() => setShowZoomModal(false)}
+            title="Close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="w-full h-full flex items-center justify-center">
+            <TransformWrapper>
+              <TransformComponent>
+                <img
+                  src={data.hdurl || data.url}
+                  alt={data.title}
+                  style={{ maxWidth: '100vw', maxHeight: '100vh', display: 'block', margin: '0 auto', boxShadow: '0 0 32px #0008' }}
+                />
+              </TransformComponent>
+            </TransformWrapper>
+          </div>
+        </div>
+      )}
       {/* Navigation buttons (always on top) */}
       <div className="w-full flex-shrink-0 flex items-center justify-center min-h-[50vh] relative pointer-events-none" style={{ minHeight: '50vh' }}>
         <button
