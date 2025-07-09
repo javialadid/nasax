@@ -4,6 +4,7 @@ import { PhotoProvider } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
 import DeepSpaceBackground from './components/DeepSpaceBackground';
 import NasaCard from './components/NasaCard';
+import NasaCardGdacs from './components/NasaCardGdacs';
 const logo = '/logo-nasax2_192.png';
 
 function App() {
@@ -39,7 +40,8 @@ function App() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl" style={{ minHeight: '80vh' }}>
             
               <NasaCardApod/>
-              <NasaCard/>
+              <NasaCard endpoint="" />
+              
             
           </div>
         </main>

@@ -69,7 +69,7 @@ expanded: expandedProp, setExpanded: setExpandedProp }) => {
     );
   }
 
-  if (loading) return <div className="aspect-[4/3] w-full flex items-center justify-center bg-white/10 rounded-xl text-2xl">Loading...</div>;
+  if (loading && !data) return <div className="aspect-[4/3] w-full flex items-center justify-center bg-white/10 rounded-xl text-2xl">Loading...</div>;
   if (error) return <div className="aspect-[4/3] w-full flex items-center justify-center bg-red-200/30 rounded-xl text-red-700 text-xl">Error: {error.message}</div>;
   if (!data) return null;
 
@@ -96,6 +96,11 @@ expanded: expandedProp, setExpanded: setExpandedProp }) => {
                 {data.title || 'NASA Card'}
               </div>
             </>
+          )}
+          {loading && data && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-50">
+              <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            </div>
           )}
         </div>
       </Dialog.Trigger>
@@ -130,6 +135,11 @@ expanded: expandedProp, setExpanded: setExpandedProp }) => {
                 <div className="text-lg opacity-90 text-center max-w-3xl overflow-y-auto flex-1 px-2">{data.explanation}</div>
               </Dialog.Description>
             </>
+          )}
+          {loading && data && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-50">
+              <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            </div>
           )}
         </Dialog.Content>
       </Dialog.Portal>
