@@ -4,12 +4,14 @@ import DeepSpaceBackground from './components/DeepSpaceBackground';
 import NasaCard from './components/NasaCard';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import ApodView from './components/ApodView';
+import EpicView from './components/EpicView';
 const logo = '/logo-nasax2_192.png';
 
 function App() {
   const location = useLocation();
   function getNavLabel(pathname: string) {
     if (pathname === '/apod') return 'Astronomy Picture of the Day';
+    if (pathname === '/epic') return 'Earth Polychromatic Imaging Camera (EPIC)';
     if (pathname === '/') return 'Home';
     // Add more routes as needed
     return '';
@@ -54,10 +56,25 @@ function App() {
               style={{ minHeight: '90vh' }}>
                 <NasaCardApod/>
                 <NasaCard endpoint="" />
-                
+                <NasaCard endpoint="epic/natural/date" render={(data) => {
+                  // Show a preview of the latest EPIC image
+                  if (!Array.isArray(data) || data.length === 0) return <div className="text-gray-400 text-center">No EPIC data</div>;
+                  const img = data[0];
+                  const dateParts = img.date.split(' ');
+                  const [year, month, day] = dateParts[0].split('-');
+                  const imageUrl = `https://epic.gsfc.nasa.gov/archive/natural/${year}/${month}/${day}/png/${img.image}.png`;
+                  return (
+                    <div className="flex flex-col items-center">
+                      <img src={imageUrl} alt={img.caption} className="object-contain rounded max-h-48" />
+                      <div className="mt-2 text-sm text-gray-200 text-center">{img.caption}</div>
+                      <div className="text-xs text-gray-400 mt-1">{img.date}</div>
+                    </div>
+                  );
+                }} />
               </div>
             } />
             <Route path="/apod" element={<ApodView />} />
+            <Route path="/epic" element={<EpicView />} />
           </Routes>
         </main>
       </div>    

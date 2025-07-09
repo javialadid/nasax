@@ -18,7 +18,7 @@ export function useNasaApi(endpoint: string, params: Record<string, string> = {}
     setLoading(true);
     setError(null);
     const baseUrl = (import.meta as unknown as ImportMeta).env.VITE_API_BASE_URL || 'http://localhost:3000';
-    let url = `${baseUrl}/api/${endpoint}`;
+    let url = `${baseUrl}/${endpoint}`;
     const searchParams = new URLSearchParams(params);
     if (endpoint === 'planetary/apod' && !params.date) {
       searchParams.set('date', getEasternDateString());

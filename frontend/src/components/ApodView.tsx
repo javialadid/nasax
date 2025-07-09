@@ -16,7 +16,7 @@ const ApodView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(() =>
     clampDateToRange(searchParams.get('date') || today, oldestAllowed, today)
   );
-  const { data, loading, error } = useNasaApi('planetary/apod', { date: currentDate });
+  const { data, loading, error } = useNasaApi('api/planetary/apod', { date: currentDate });
 
   // Spinner overlay delay state (unchanged)
   const [showSpinner, setShowSpinner] = useState(false);
