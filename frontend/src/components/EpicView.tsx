@@ -3,30 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 import { useNasaApi } from '../hooks/useNasaApi';
 import SpinnerOverlay from './SpinnerOverlay';
 import Carousel from './Carousel';
+import { getEasternDateString, addDays } from '../utils/dateutil';
+import { getMaxDaysBackEpic } from '../utils/env';
 
-const MAX_DAYS_BACK = 7;
-
-function getEasternDateString(): string {
-  const now = new Date();
-  const eastern = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-  if (eastern.getHours() === 0 && eastern.getMinutes() < 5) {
-    eastern.setDate(eastern.getDate() - 1);
-  }
-  return eastern.toISOString().slice(0, 10);
-}
-
-function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function daysBetween(a: string, b: string): number {
-  return Math.floor((new Date(a).getTime() - new Date(b).getTime()) / (1000 * 60 * 60 * 24));
-}
-
-// Set to true to enable fade/blink effect between images
-const CAROUSEL_FADE = false;
+const MAX_DAYS_BACK = getMaxDaysBackEpic()
+const EPIC_API_PATH = 'EPIC/api/natural/date/';
+const EPIC_PICTURE_BASE_URL = 'https://epic.gsfc.nasa.gov/archive/natural/'
 
 const EpicView: React.FC = () => {
   const today = getEasternDateString();
@@ -36,11 +18,19 @@ const EpicView: React.FC = () => {
     const urlDate = searchParams.get('date') || today;
     return urlDate < oldestAllowed ? oldestAllowed : urlDate > today ? today : urlDate;
   });
-  const { data, loading, error } = useNasaApi(`api/EPIC/api/natural/date/${currentDate}`);
+  const { data, loading, error } = useNasaApi(`${EPIC_API_PATH}${currentDate}`);
   const [noRecentData, setNoRecentData] = useState(false);
   const [autoBackCount, setAutoBackCount] = useState(0);
   const [carouselIdx, setCarouselIdx] = useState(0);
-  const [autoPlay, setAutoPlay] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(true);
+  // Track the last date for which we requested data to avoid skipping days before the API responds
+  const lastRequestedDate = useRef<string>(currentDate);
+  // Track tested dates and their results for debugging
+  const [testedDates, setTestedDates] = useState<{date: string, result: 'data' | 'no-data' | 'error'}[]>([]);
+
+  useEffect(() => {
+    lastRequestedDate.current = currentDate;
+  }, [currentDate]);
 
   useEffect(() => {
     setSearchParams({ date: currentDate });
@@ -48,8 +38,28 @@ const EpicView: React.FC = () => {
 
   // If no data for currentDate, go back a day, up to MAX_DAYS_BACK
   useEffect(() => {
-    if (!loading && (!data || !Array.isArray(data) || data.length === 0) && autoBackCount < MAX_DAYS_BACK) {
+    // Log the test for this date
+    if (!loading && lastRequestedDate.current === currentDate) {
+      if (error) {
+        setTestedDates(prev => [...prev, {date: currentDate, result: 'error'}]);
+        console.log(`[EPIC TEST] ${currentDate}: error`, error);
+      } else if (!data || !Array.isArray(data) || data.length === 0) {
+        setTestedDates(prev => [...prev, {date: currentDate, result: 'no-data'}]);
+        console.log(`[EPIC TEST] ${currentDate}: no data ###${data}###`);
+      } else {
+        setTestedDates(prev => [...prev, {date: currentDate, result: 'data'}]);
+        console.log(`[EPIC TEST] ${currentDate}: data found`);
+      }
+    }
+    // Pipeline: only request the next date after the previous request completes and is confirmed to have no data
+    if (
+      !loading &&
+      lastRequestedDate.current === currentDate &&
+      (!data || !Array.isArray(data) || data.length === 0) &&
+      autoBackCount < MAX_DAYS_BACK
+    ) {
       const prevDate = addDays(currentDate, -1);
+      console.log(`Going back as there is no data yet for date ${currentDate}. Next -> ${prevDate}`)
       if (prevDate >= oldestAllowed) {
         setCurrentDate(prevDate);
         setAutoBackCount(c => c + 1);
@@ -57,19 +67,25 @@ const EpicView: React.FC = () => {
       } else {
         setNoRecentData(true);
       }
-    } else if (!loading && data && Array.isArray(data) && data.length > 0) {
+    } else if (
+      !loading &&
+      lastRequestedDate.current === currentDate &&
+      data &&
+      Array.isArray(data) &&
+      data.length > 0
+    ) {
       setAutoBackCount(0);
       setNoRecentData(false);
       setCarouselIdx(data.length - 1); // Start at most recent image
     }
-  }, [data, loading, currentDate, oldestAllowed, autoBackCount]);
+  }, [data, loading, currentDate, oldestAllowed, autoBackCount, error]);
 
   // Build array of image URLs from data
   const imageUrls = data && Array.isArray(data)
     ? data.map(img => {
         const dateParts = img.date.split(' ');
         const [year, month, day] = dateParts[0].split('-');
-        return `https://epic.gsfc.nasa.gov/archive/natural/${year}/${month}/${day}/png/${img.image}.png`;
+        return `${EPIC_PICTURE_BASE_URL}${year}/${month}/${day}/png/${img.image}.png`;
       })
     : [];
   const currentImg = data && Array.isArray(data) && data[carouselIdx];
@@ -88,7 +104,7 @@ const EpicView: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col w-full overflow-hidden relative min-h-[calc(100vh-3.5rem)] items-center">
+    <div className="flex flex-col w-full h-full min-h-0 flex-1 overflow-hidden relative items-center">
       <div className="w-full max-w-2xl flex flex-row items-center justify-center gap-4 mb-2 mt-2">
         <button
           onClick={() => setCurrentDate(addDays(currentDate, -1))}
@@ -97,7 +113,7 @@ const EpicView: React.FC = () => {
         >
           Previous Day
         </button>
-        <span className="text-lg font-semibold" style={{ color: 'bisque' }}>{currentDate}</span>
+        <span className="text-lg font-semibold">{currentDate}</span>
         <button
           onClick={() => setCurrentDate(addDays(currentDate, 1))}
           disabled={currentDate >= today}
@@ -106,34 +122,31 @@ const EpicView: React.FC = () => {
           Next Day
         </button>
       </div>
-      <div className="flex flex-col items-center justify-center w-full max-w-2xl flex-1">
-        <div className="relative w-full flex-1 flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center w-full flex-1 min-h-0">
+        <div className="relative w-full flex-1 flex items-center justify-center min-h-[50vh]">
           {imageUrls.length > 0 ? (
-            <Carousel
-              imageUrls={imageUrls}
-              order={"desc"}
-              onIndexChange={setCarouselIdx}
-              autoPlay={autoPlay}
-            />
+            <div
+              className="object-contain mx-6 my-4 picture-shadow bg-gray-800/60 rounded-xl flex items-center justify-center"
+              style={{ aspectRatio: '1 / 1', width: 'min(70vh, 90vw)', maxWidth: '90vw', maxHeight: '70vh' }}
+            >
+              <Carousel
+                imageUrls={imageUrls}
+                order={"desc"}
+                onIndexChange={setCarouselIdx}
+                autoPlay={autoPlay}
+              />
+            </div>
           ) : (
             <SpinnerOverlay />
           )}
         </div>
         {/* Metadata always below the image, never overlaid */}
-        <div className="mt-2 text-[0.75rem] text-gray-400 text-center leading-tight" style={{ opacity: 0.8, maxWidth: '420px', wordBreak: 'break-word' }}>
+        <div className="mt-2 text-[0.75rem] text-gray-400 text-center leading-tight" style={{ opacity: 0.8, maxWidth: '420px', wordBreak: 'break-word', overflowY: 'auto', maxHeight: '20vh' }}>
           <div style={{ whiteSpace: 'pre-line', overflowWrap: 'break-word' }}>{currentImg && currentImg.caption}</div>
           <div>{currentImg && currentImg.date}</div>
           <div>Image {carouselIdx + 1} of {data.length}</div>
         </div>
       </div>
-      {imageUrls.length > 1 && (
-        <button
-          className="mt-4 px-6 py-2 bg-blue-700 text-white rounded shadow hover:bg-blue-800"
-          onClick={() => setAutoPlay((p) => !p)}
-        >
-          {autoPlay ? '❚❚ Pause' : '▶ Play'}
-        </button>
-      )}
     </div>
   );
 };

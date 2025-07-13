@@ -6,8 +6,9 @@ import { useSearchParams } from 'react-router-dom';
 import SpinnerOverlay from './SpinnerOverlay';
 import FadeTransition from './FadeTransition';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { getMaxDaysBackEpic } from '../utils/env';
 
-const MAX_DAYS_BACK = parseInt(import.meta.env.VITE_APOD_MAX_DAYS_BACK || '7');
+const MAX_DAYS_BACK = getMaxDaysBackEpic();
 
 const ApodView: React.FC = () => {
   const today = getEasternDateString();
@@ -16,7 +17,27 @@ const ApodView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(() =>
     clampDateToRange(searchParams.get('date') || today, oldestAllowed, today)
   );
-  const { data, loading, error } = useNasaApi('api/planetary/apod', { date: currentDate });
+  const { data, loading, error } = useNasaApi('planetary/apod', { date: currentDate });
+
+  // Track how many days we've gone back to avoid infinite loops
+  const [autoBackCount, setAutoBackCount] = useState(0);
+  const [noRecentData, setNoRecentData] = useState(false);
+
+  useEffect(() => {
+    if (!loading && (!data || !data.url) && autoBackCount < MAX_DAYS_BACK) {
+      const prevDate = addDays(currentDate, -1);
+      if (prevDate >= oldestAllowed) {
+        setCurrentDate(prevDate);
+        setAutoBackCount(c => c + 1);
+        setNoRecentData(false);
+      } else {
+        setNoRecentData(true);
+      }
+    } else if (!loading && data && data.url) {
+      setAutoBackCount(0);
+      setNoRecentData(false);
+    }
+  }, [data, loading, currentDate, oldestAllowed, autoBackCount]);
 
   // Spinner overlay delay state (unchanged)
   const [showSpinner, setShowSpinner] = useState(false);
@@ -114,6 +135,9 @@ const ApodView: React.FC = () => {
   if (error) {
     return <div className="flex items-center justify-center h-[60vh] text-red-600 text-xl">Error: {error.message}</div>;
   }
+  if (noRecentData) {
+    return <div className="flex items-center justify-center h-[60vh] text-xl text-gray-400">No APOD found for the last {MAX_DAYS_BACK} days.</div>;
+  }
   if (!data && !loading && !error) {
     return <div className="flex items-center justify-center h-[60vh] text-xl text-gray-400">No data found.</div>;
   }
@@ -131,7 +155,7 @@ const ApodView: React.FC = () => {
 
   // Helper to render APOD content
   const renderApodContent = (apod: any, date: string) => (
-    <div className="absolute inset-0 w-full h-full">
+    <div className="absolute inset-0 w-full h-full flex flex-col min-h-0">
       <div className="w-full flex flex-col items-center justify-center bg-transparent px-0 pt-0 pb-0" style={{ minHeight: 0 }}>
         <div className="flex flex-row items-center w-full gap-2">
           <div className="flex-1" />
@@ -145,13 +169,13 @@ const ApodView: React.FC = () => {
           </span>
         </div>
       </div>
-      <div className="w-full flex-shrink-0 flex flex-col items-center justify-center min-h-[50vh] relative" style={{ minHeight: '50vh' }}>
-        <div className="relative w-full flex items-center justify-center" style={{ minHeight: '50vh' }}>
+      <div className="w-full flex-shrink-0 flex flex-col items-center justify-center min-h-0 flex-1" >
+        <div className="relative w-full flex items-center justify-center" >
           <img
             src={apod.hdurl || apod.url}
             alt={apod.title}
             className={`object-contain mx-6 my-4 picture-shadow select-none${(apod.hdurl || apod.url) ? ' cursor-zoom-in' : ''}`}
-            style={{ background: 'transparent', border: 'none', padding: 0, height: '50vh', maxHeight: '50vh' }}
+            style={{ background: 'transparent', border: 'none', padding: 0, maxHeight: '60vh'}}
             draggable={false}
             onClick={() => (apod.hdurl || apod.url) && setShowZoomModal(true)}
             aria-label="View full size image"
@@ -162,15 +186,15 @@ const ApodView: React.FC = () => {
             }}
           />
         </div>
-      </div>
-      <div className="w-full max-h-[40vh] overflow-y-auto">
-        <Explanation text={apod.explanation} />
+        <div className="w-full flex-1 min-h-0 overflow-y-auto p-1">
+          <Explanation text={apod.explanation} />
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col w-full overflow-hidden relative min-h-[90vh]">
+    <div className="flex flex-col w-full h-full min-h-0 flex-1 overflow-hidden relative">
       {notification && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-4 py-2 
           rounded shadow z-50 text-center text-xl">
@@ -209,7 +233,7 @@ const ApodView: React.FC = () => {
         </div>
       )}
       {/* Navigation buttons (always on top) */}
-      <div className="w-full flex-shrink-0 flex items-center justify-center min-h-[50vh] relative pointer-events-none" style={{ minHeight: '50vh' }}>
+      <div className="w-full flex-shrink-0 flex items-center justify-center min-h-[80vh] relative pointer-events-none" style={{ minHeight: '80vh' }}>
         <button
           className={`absolute left-0 top-1/2 -translate-y-1/2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-40 disabled:cursor-not-allowed
             w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center rounded-full border-2 border-gray-400 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-700 shadow-xl hover:from-blue-900 hover:to-gray-800 group pointer-events-auto`}

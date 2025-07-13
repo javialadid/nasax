@@ -1,10 +1,15 @@
 
 import NasaCardApod from './components/NasaCardApod';
 import DeepSpaceBackground from './components/DeepSpaceBackground';
-import NasaCard from './components/NasaCard';
+import NasaCardEpic from './components/NasaCardEpic';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import ApodView from './components/ApodView';
 import EpicView from './components/EpicView';
+import NasaCardDonki from './components/NasaCardDonki';
+import DonkiNotificationsView from './components/DonkiNotificationsView';
+import NasaRoversCard from './components/NasaRoversCard';
+import NasaRoversView from './components/views/NasaRoversView';
+import ScrollableView from './components/ScrollableView';
 const logo = '/logo-nasax2_192.png';
 
 function App() {
@@ -12,69 +17,61 @@ function App() {
   function getNavLabel(pathname: string) {
     if (pathname === '/apod') return 'Astronomy Picture of the Day';
     if (pathname === '/epic') return 'Earth Polychromatic Imaging Camera (EPIC)';
-    if (pathname === '/') return 'Home';
+    if (pathname === '/rovers') return 'Mars Rovers: Latest Images';
+    if (pathname === '/') return '';
     // Add more routes as needed
     return '';
   }
   return (    
     <>
       <DeepSpaceBackground />
-      <div className="min-h-screen  text-[var(--color-text)] z-10">
+      <div className="min-h-screen h-screen w-full text-[var(--color-text)] z-10 overflow-hidden flex flex-col">
         {/* Top Pane */}
-        <nav className="w-full h-14 flex items-center justify-between px-6 horizon-gradient bg-[#181c2f]/90 z-10 shadow-md relative" style={{backdropFilter: 'blur(2px)'}}>
-          <div className="flex items-center gap-3 h-full">
-            <Link to="/" className="flex items-center gap-3 h-full focus:outline-none">
+        <nav className="w-full h-12 sm:h-14 flex items-center justify-between px-2 sm:px-6 horizon-gradient bg-[#181c2f]/90 z-10 shadow-md relative" style={{backdropFilter: 'blur(2px)'}}>
+          <div className="flex items-center gap-2 sm:gap-3 h-full">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 h-full focus:outline-none">
               <img
                 src={logo}
                 alt="NasaX"
-                className="h-16 object-contain"
+                className="h-8 sm:h-16 object-contain hidden sm:block"
                 style={{ minWidth: 92 }}
               />
-              <span className="text-xl font-bold tracking-wide">NasaX</span>
+              <span className="text-base sm:text-xl font-bold tracking-wide">NasaX</span>
             </Link>
           </div>
           {/* Centered navigation context */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-            <span className="text-lg font-semibold text-white/90" style={{ color: 'bisque' }}
+            <span className="text-sm sm:text-lg font-semibold text-white/90" 
             >{getNavLabel(location.pathname)}</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Dropdown menus will go here */}
-            <div className="w-24 h-8 bg-gray-700/30 rounded text-sm flex items-center justify-center text-gray-300 
-              cursor-pointer">
-                <Link to="/" className="flex items-center gap-3 h-full focus:outline-none">
+            <div className="w-16 sm:w-24 h-7 sm:h-8 bg-gray-700/30 rounded text-xs sm:text-sm flex items-center justify-center text-gray-300 cursor-pointer">
+                <Link to="/" className="flex items-center gap-2 sm:gap-3 h-full focus:outline-none">
               Home
               </Link>
             </div>            
           </div>
         </nav>
         {/* Main Content */}
-        <main className="flex flex-col items-center justify-center pt-1 px-2 sm:px-6 md:px-12 w-full">
+        <main className="flex-1 flex flex-col items-center justify-center pt-1 px-1 sm:px-6  w-full min-h-0 overflow-hidden">
           <Routes>
             <Route path="/" element={
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl" 
-              style={{ minHeight: '90vh' }}>
-                <NasaCardApod/>
-                <NasaCard endpoint="" />
-                <NasaCard endpoint="epic/natural/date" render={(data) => {
-                  // Show a preview of the latest EPIC image
-                  if (!Array.isArray(data) || data.length === 0) return <div className="text-gray-400 text-center">No EPIC data</div>;
-                  const img = data[0];
-                  const dateParts = img.date.split(' ');
-                  const [year, month, day] = dateParts[0].split('-');
-                  const imageUrl = `https://epic.gsfc.nasa.gov/archive/natural/${year}/${month}/${day}/png/${img.image}.png`;
-                  return (
-                    <div className="flex flex-col items-center">
-                      <img src={imageUrl} alt={img.caption} className="object-contain rounded max-h-48" />
-                      <div className="mt-2 text-sm text-gray-200 text-center">{img.caption}</div>
-                      <div className="text-xs text-gray-400 mt-1">{img.date}</div>
-                    </div>
-                  );
-                }} />
-              </div>
+              <ScrollableView className="flex items-center justify-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 w-full max-w-5xl py-8">
+                  <NasaCardApod/>
+                  <NasaCardEpic />
+                  <NasaCardDonki />
+                  <NasaRoversCard />
+                  {/* Add empty divs for 2x2 grid layout, or more cards in the future */}
+                  <div className="hidden sm:block" />
+                </div>
+              </ScrollableView>
             } />
             <Route path="/apod" element={<ApodView />} />
             <Route path="/epic" element={<EpicView />} />
+            <Route path="/donki" element={<DonkiNotificationsView />} />
+            <Route path="/rovers" element={<NasaRoversView />} />
           </Routes>
         </main>
       </div>    
