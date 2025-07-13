@@ -108,131 +108,134 @@ const NasaRoversView: React.FC = () => {
       </div>
 
       {/* Main Content - responsive and gap-free */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row w-full px-2 pb-2 pt-1 overflow-hidden">
-        {/* Image Area */}
-        <div className="flex-1 flex flex-col items-center justify-start min-h-0 overflow-hidden">
-          <div className="w-full h-full aspect-[1/1] lg:aspect-[4/3] flex items-center justify-center overflow-hidden">
-            {loading && <SpinnerOverlay />}
-            {error && <div className="text-red-500 text-center">Error: {error.message}</div>}
-            {!loading && !error && currentImages.length === 0 && (
-              <div className="text-gray-400 text-center">No images found for {rover}.</div>
-            )}
-            {!loading && !error && currentImages.length > 0 && (
-              !showFullscreen && (
-                <Carousel
-                  imageUrls={currentImages.map((img: any) => img.img_src)}
-                  altTexts={currentImages.map((img: any) => img.earth_date || rover)}
-                  order="desc"
-                  showArrows
-                  showIndicators
-                  showPlayPause
-                  className="w-full h-full"
-                  style={{ height: '100%' }}
-                  imageClassName="object-contain w-full h-full max-w-full max-h-full rounded-xl shadow-lg"
-                  onIndexChange={handleIndexChange}
-                  onImageClick={() => setShowFullscreen(true)}
-                  currentIndex={currentImageIdx}
-                />
-              )
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row w-full overflow-hidden">
+        {/* Image + Info Group */}
+        <div className="flex flex-col lg:flex-row w-full h-full min-h-0 flex-1">
+          {/* Image Area */}
+          <div className="flex-1 flex flex-col items-center justify-start min-h-0 overflow-hidden">
+          <div className="w-full flex-1 flex items-center justify-center overflow-hidden lg:aspect-[4/3]" style={{ aspectRatio: '1 / 1' }}>
+
+              {loading && <SpinnerOverlay />}
+              {error && <div className="text-red-500 text-center">Error: {error.message}</div>}
+              {!loading && !error && currentImages.length === 0 && (
+                <div className="text-gray-400 text-center">No images found for {rover}.</div>
+              )}
+              {!loading && !error && currentImages.length > 0 && (
+                !showFullscreen && (
+                  <Carousel
+                    imageUrls={currentImages.map((img: any) => img.img_src)}
+                    altTexts={currentImages.map((img: any) => img.earth_date || rover)}
+                    order="desc"
+                    showArrows
+                    showIndicators
+                    showPlayPause
+                    className="w-full h-full"
+                    style={{ height: '100%' }}
+                    imageClassName="object-contain w-full h-full max-w-full max-h-full rounded-xl shadow-lg"
+                    onIndexChange={handleIndexChange}
+                    onImageClick={() => setShowFullscreen(true)}
+                    currentIndex={currentImageIdx}
+                  />
+                )
+              )}
+            </div>
+            {/* Fullscreen Modal */}
+            {showFullscreen && currentImage && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 animate-fade-in">
+                {/* Close button */}
+                <button
+                  className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-blue-400 opacity-60 hover:opacity-100 transition-opacity z-50"
+                  onClick={() => setShowFullscreen(false)}
+                  title="Close"
+                  aria-label="Close fullscreen"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                {/* Prev button */}
+                <button
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-blue-400 opacity-70 hover:opacity-100 transition-opacity z-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                  onClick={() => handleIndexChange(Math.max(0, currentImageIdx - 1))}
+                  disabled={currentImageIdx === 0}
+                  aria-label="Previous image"
+                  tabIndex={0}
+                >
+                  <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                </button>
+                {/* Next button */}
+                <button
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-blue-400 opacity-70 hover:opacity-100 transition-opacity z-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                  onClick={() => handleIndexChange(Math.min(currentImages.length - 1, currentImageIdx + 1))}
+                  disabled={currentImageIdx === currentImages.length - 1}
+                  aria-label="Next image"
+                  tabIndex={0}
+                >
+                  <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                </button>
+                <div className="w-full h-full flex items-center justify-center">
+                  <TransformWrapper ref={transformRef}>
+                    <TransformComponent>
+                      <img
+                        src={currentImage.img_src}
+                        alt={currentImage.camera?.full_name || 'Mars Rover Image'}
+                        className="object-contain max-w-full max-h-full rounded-xl shadow-2xl border-2 border-gray-700"
+                        style={{ background: 'transparent', border: 'none', padding: 0 }}
+                        draggable={false}
+                      />
+                    </TransformComponent>
+                  </TransformWrapper>
+                </div>
+              </div>
             )}
           </div>
-          {/* Fullscreen Modal */}
-          {showFullscreen && currentImage && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 animate-fade-in">
-              {/* Close button */}
-              <button
-                className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-blue-400 opacity-60 hover:opacity-100 transition-opacity z-50"
-                onClick={() => setShowFullscreen(false)}
-                title="Close"
-                aria-label="Close fullscreen"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              {/* Prev button */}
-              <button
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-blue-400 opacity-70 hover:opacity-100 transition-opacity z-50 disabled:opacity-30 disabled:cursor-not-allowed"
-                onClick={() => handleIndexChange(Math.max(0, currentImageIdx - 1))}
-                disabled={currentImageIdx === 0}
-                aria-label="Previous image"
-                tabIndex={0}
-              >
-                <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-              </button>
-              {/* Next button */}
-              <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-blue-400 opacity-70 hover:opacity-100 transition-opacity z-50 disabled:opacity-30 disabled:cursor-not-allowed"
-                onClick={() => handleIndexChange(Math.min(currentImages.length - 1, currentImageIdx + 1))}
-                disabled={currentImageIdx === currentImages.length - 1}
-                aria-label="Next image"
-                tabIndex={0}
-              >
-                <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-              </button>
-              <div className="w-full h-full flex items-center justify-center">
-                <TransformWrapper ref={transformRef}>
-                  <TransformComponent>
-                    <img
-                      src={currentImage.img_src}
-                      alt={currentImage.camera?.full_name || 'Mars Rover Image'}
-                      className="object-contain max-w-full max-h-full rounded-xl shadow-2xl border-2 border-gray-700"
-                      style={{ background: 'transparent', border: 'none', padding: 0 }}
-                      draggable={false}
-                    />
-                  </TransformComponent>
-                </TransformWrapper>
+          {/* Metadata Sidebar - responsive */}
+          <div className="w-full lg:w-[22ch] lg:mt-0 lg:ml-4 flex-shrink-0 bg-gray-900 bg-opacity-90 rounded-xl p-2 lg:p-3 text-gray-200 shadow-lg overflow-y-auto lg:h-full">
+            <div className="mb-1">
+              <div className="font-semibold text-base lg:text-lg mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+                <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5 text-blue-300' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9.75 17L6 21h12l-3.75-4M12 3v14' /></svg>
+                {currentImage
+                  ? (currentImage.rover?.name || rover.charAt(0).toUpperCase() + rover.slice(1))
+                  : (rover.charAt(0).toUpperCase() + rover.slice(1))}
               </div>
-            </div>
-          )}
-        </div>
-        {/* Metadata Sidebar - responsive */}
-        <div className="w-full lg:w-[22ch] mt-2 lg:mt-0 lg:ml-4 flex-shrink-0 bg-gray-900 bg-opacity-90 rounded-xl p-2 lg:p-3 text-gray-200 shadow-lg max-h-[30vh] overflow-y-auto lg:max-h-none">
-          <div className="mb-2">
-            <div className="font-semibold text-base lg:text-lg mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
-              <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5 text-blue-300' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9.75 17L6 21h12l-3.75-4M12 3v14' /></svg>
-              Image Info
-            </div>
-            {currentImage ? (
-              <ul className="text-sm space-y-2">
-                <li>
-                  <div className="font-semibold text-blue-200 mb-0.5">Rover</div>
-                  <div className="break-words">{currentImage.rover?.name || rover.charAt(0).toUpperCase() + rover.slice(1)}</div>
-                </li>
-                <li>
-                  <div className="font-semibold text-blue-200 mb-0.5">Status</div>
-                  <div className="break-words">{currentImage.rover?.status}</div>
-                </li>
-                <li>
-                  <div className="font-semibold text-blue-200 mb-0.5">Sol</div>
-                  <div className="break-words">{currentImage.sol}</div>
-                </li>
-                <li>
-                  <div className="font-semibold text-blue-200 mb-0.5">Earth Date</div>
-                  <div className="break-words">{currentImage.earth_date}</div>
-                </li>
-                <li>
-                  <div className="font-semibold text-blue-200 mb-0.5">Camera</div>
-                  <div className="break-words">{currentImage.camera?.full_name || currentImage.camera?.name}</div>
-                </li>
-                {currentImage.camera?.name && (
+              {currentImage ? (
+                <ul className="text-sm space-y-2"> 
+                  <li className="pt-2 mt-2">
+                    <div className="font-semibold text-blue-200 mb-0.5">Image</div>
+                    <div className="break-words">{currentImageIdx + 1} / {currentImages.length}</div>
+                  </li>                 
                   <li>
-                    <div className="font-semibold text-blue-200 mb-0.5">Camera Code</div>
-                    <div className="break-words">{currentImage.camera.name}</div>
+                    <div className="font-semibold text-blue-200 mb-0.5">Status</div>
+                    <div className="break-words">{currentImage.rover?.status}</div>
                   </li>
-                )}
-                <li>
-                  <div className="font-semibold text-blue-200 mb-0.5">Image ID</div>
-                  <div className="break-words">{currentImage.id}</div>
-                </li>
-                <li className="pt-2 border-t border-gray-700 mt-2">
-                  <div className="font-semibold text-blue-200 mb-0.5">Image</div>
-                  <div className="break-words">{currentImageIdx + 1} / {currentImages.length}</div>
-                </li>
-              </ul>
-            ) : (
-              <div className="text-gray-400">No image selected.</div>
-            )}
+                  <li>
+                    <div className="font-semibold text-blue-200 mb-0.5">Sol</div>
+                    <div className="break-words">{currentImage.sol}</div>
+                  </li>
+                  <li>
+                    <div className="font-semibold text-blue-200 mb-0.5">Earth Date</div>
+                    <div className="break-words">{currentImage.earth_date}</div>
+                  </li>
+                  <li>
+                    <div className="font-semibold text-blue-200 mb-0.5">Camera</div>
+                    <div className="break-words">{currentImage.camera?.full_name || currentImage.camera?.name}</div>
+                  </li>
+                  {currentImage.camera?.name && (
+                    <li>
+                      <div className="font-semibold text-blue-200 mb-0.5">Camera Code</div>
+                      <div className="break-words">{currentImage.camera.name}</div>
+                    </li>
+                  )}
+                  <li>
+                    <div className="font-semibold text-blue-200 mb-0.5">Image ID</div>
+                    <div className="break-words">{currentImage.id}</div>
+                  </li>
+                  
+                </ul>
+              ) : (
+                <div className="text-gray-400">No image selected.</div>
+              )}
+            </div>
           </div>
         </div>
       </div>

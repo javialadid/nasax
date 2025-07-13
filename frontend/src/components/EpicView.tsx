@@ -104,7 +104,7 @@ const EpicView: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col w-full h-full min-h-0 flex-1 overflow-hidden relative items-center">
+    <div className="flex flex-col w-full h-full min-h-0 flex-1 overflow-hidden relative items-center p-1 p-2">
       <div className="w-full max-w-2xl flex flex-row items-center justify-center gap-4 mb-2 mt-2">
         <button
           onClick={() => setCurrentDate(addDays(currentDate, -1))}
@@ -122,29 +122,59 @@ const EpicView: React.FC = () => {
           Next Day
         </button>
       </div>
-      <div className="flex flex-col items-center justify-center w-full flex-1 min-h-0">
-        <div className="relative w-full flex-1 flex items-center justify-center min-h-[50vh]">
-          {imageUrls.length > 0 ? (
-            <div
-              className="object-contain mx-6 my-4 picture-shadow bg-gray-800/60 rounded-xl flex items-center justify-center"
-              style={{ aspectRatio: '1 / 1', width: 'min(70vh, 90vw)', maxWidth: '90vw', maxHeight: '70vh' }}
-            >
-              <Carousel
-                imageUrls={imageUrls}
-                order={"desc"}
-                onIndexChange={setCarouselIdx}
-                autoPlay={autoPlay}
-              />
-            </div>
-          ) : (
-            <SpinnerOverlay />
-          )}
+      <div className="flex flex-col lg:flex-row items-stretch justify-center w-full flex-1 min-h-0 gap-4">
+        {/* Image Area */}
+        <div className="flex-1 flex items-center justify-center min-h-0 h-full w-full">
+          <div
+            className="object-contain picture-shadow bg-gray-800/60 rounded-xl flex items-center justify-center w-full h-full max-w-full max-h-full m-0"
+            style={{ aspectRatio: '1 / 1', height: '100%', width: '100%' }}
+          >
+            <Carousel
+              imageUrls={imageUrls}
+              order={"desc"}
+              onIndexChange={setCarouselIdx}
+              autoPlay={autoPlay}
+              className="w-full h-full"
+              imageClassName="object-contain w-full h-full max-w-full max-h-full rounded-xl"
+            />
+          </div>
         </div>
-        {/* Metadata always below the image, never overlaid */}
-        <div className="mt-2 text-[0.75rem] text-gray-400 text-center leading-tight" style={{ opacity: 0.8, maxWidth: '420px', wordBreak: 'break-word', overflowY: 'auto', maxHeight: '20vh' }}>
-          <div style={{ whiteSpace: 'pre-line', overflowWrap: 'break-word' }}>{currentImg && currentImg.caption}</div>
-          <div>{currentImg && currentImg.date}</div>
-          <div>Image {carouselIdx + 1} of {data.length}</div>
+        {/* Metadata Sidebar - like NasaRoversView */}
+        <div className="w-full lg:w-[22ch] lg:mt-0 flex-shrink-0 bg-gray-900 bg-opacity-90 rounded-xl p-2 lg:p-3 text-gray-200 shadow-lg overflow-y-auto lg:h-full mt-2 lg:mt-0">
+          <div className="mb-1">
+            <div className="font-semibold text-base lg:text-lg mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+              <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5 text-blue-300' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 3v18m9-9H3' /></svg>
+              EPIC Image
+            </div>
+            {currentImg ? (
+              <ul className="text-sm space-y-2">
+                <li className="pt-2 border-gray-700 mt-2">
+                  <div className="font-semibold text-blue-200 mb-0.5">Caption</div>
+                  <div className="break-words whitespace-pre-line">{currentImg.caption}</div>
+                </li>
+                <li>
+                  <div className="font-semibold text-blue-200 mb-0.5">Date</div>
+                  <div className="break-words">{currentImg.date}</div>
+                </li>
+                <li>
+                  <div className="font-semibold text-blue-200 mb-0.5">Image</div>
+                  <div className="break-words">{carouselIdx + 1} / {data.length}</div>
+                </li>
+                <li>
+                  <div className="font-semibold text-blue-200 mb-0.5">Image Name</div>
+                  <div className="break-words">{currentImg.image}</div>
+                </li>
+                {currentImg.centroid_coordinates && (
+                  <li>
+                    <div className="font-semibold text-blue-200 mb-0.5">Centroid Coordinates</div>
+                    <div className="break-words">Lat: {currentImg.centroid_coordinates.lat}, Lon: {currentImg.centroid_coordinates.lon}</div>
+                  </li>
+                )}
+              </ul>
+            ) : (
+              <div className="text-gray-400">No image selected.</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

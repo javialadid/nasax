@@ -25,7 +25,7 @@ function App() {
   return (    
     <>
       <DeepSpaceBackground />
-      <div className="min-h-screen h-screen w-full text-[var(--color-text)] z-10 overflow-hidden flex flex-col">
+      <div className="w-full text-[var(--color-text)] z-10 overflow-hidden flex flex-col h-screen min-h-0">
         {/* Top Pane */}
         <nav className="w-full h-12 sm:h-14 flex items-center justify-between px-2 sm:px-6 horizon-gradient bg-[#181c2f]/90 z-10 shadow-md relative" style={{backdropFilter: 'blur(2px)'}}>
           <div className="flex items-center gap-2 sm:gap-3 h-full">
@@ -54,10 +54,12 @@ function App() {
           </div>
         </nav>
         {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center justify-center pt-1 px-1 sm:px-6  w-full min-h-0 overflow-hidden">
+        <main
+          className="flex-1 min-h-0 flex flex-col items-center justify-center w-full overflow-hidden"
+        >
           <Routes>
             <Route path="/" element={
-              <ScrollableView className="flex items-center justify-center">
+              <ScrollableView className="flex  justify-center">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 w-full max-w-5xl py-8">
                   <NasaCardApod/>
                   <NasaCardEpic />
