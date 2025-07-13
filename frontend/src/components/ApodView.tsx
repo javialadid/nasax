@@ -156,15 +156,15 @@ const ApodView: React.FC = () => {
   // Helper to render APOD content
   const renderApodContent = (apod: any, date: string) => (
     <div className="absolute inset-0 w-full h-full flex flex-col min-h-0">
-      <div className="w-full flex flex-col items-center justify-center bg-transparent px-0 pt-0 pb-0" style={{ minHeight: 0 }}>
+      <div className="w-full flex flex-col items-center justify-center bg-transparent px-2 py-1 sm:px-0 sm:py-0 portrait:px-0 portrait:py-0" style={{ minHeight: 0 }}>
         <div className="flex flex-row items-center w-full gap-2">
           <div className="flex-1" />
           <h2
-            className="text-2xl sm:text-3xl font-bold text-center break-words m-0"            
+            className="text-lg portrait:text-xs xs:text-xl sm:text-3xl portrait:text-3xl landscape:text-lg font-bold text-center break-words m-0"
           >
             {apod.title}
           </h2>
-          <span className="flex-1 text-sm text-gray-300 ml-3 whitespace-nowrap text-left">
+          <span className="flex-1 text-xs sm:text-sm portrait:text-sm text-gray-300 ml-2 sm:ml-3 portrait:ml-3 whitespace-nowrap text-left">
             {formatDateString(date)}
           </span>
         </div>
@@ -174,7 +174,7 @@ const ApodView: React.FC = () => {
           <img
             src={apod.hdurl || apod.url}
             alt={apod.title}
-            className={`object-contain mx-6 my-4 picture-shadow select-none${(apod.hdurl || apod.url) ? ' cursor-zoom-in' : ''}`}
+            className={`object-contain mx-2 my-2 sm:mx-6 sm:my-4 portrait:mx-6 portrait:my-4 picture-shadow select-none${(apod.hdurl || apod.url) ? ' cursor-zoom-in' : ''}`}
             style={{ background: 'transparent', border: 'none', padding: 0, maxHeight: '60vh'}}
             draggable={false}
             onClick={() => (apod.hdurl || apod.url) && setShowZoomModal(true)}
@@ -196,8 +196,8 @@ const ApodView: React.FC = () => {
   return (
     <div className="flex flex-col w-full h-full min-h-0 flex-1 overflow-hidden relative">
       {notification && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-4 py-2 
-          rounded shadow z-50 text-center text-xl">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-2 sm:px-4 portrait:px-4 py-1 sm:py-2 portrait:py-2 
+          rounded shadow z-50 text-sm sm:text-xl portrait:text-xl">
           {notification}
         </div>
       )}
@@ -236,25 +236,25 @@ const ApodView: React.FC = () => {
       <div className="w-full flex-shrink-0 flex items-center justify-center min-h-[80vh] relative pointer-events-none" style={{ minHeight: '80vh' }}>
         <button
           className={`absolute left-0 top-1/2 -translate-y-1/2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-40 disabled:cursor-not-allowed
-            w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center rounded-full border-2 border-gray-400 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-700 shadow-xl hover:from-blue-900 hover:to-gray-800 group pointer-events-auto`}
+            w-10 h-10 sm:w-16 sm:h-16 portrait:w-16 portrait:h-16 flex items-center justify-center rounded-full border-2 border-gray-400 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-700 shadow-xl hover:from-blue-900 hover:to-gray-800 group pointer-events-auto`}
           onClick={handlePrev}
           disabled={!canGoPrev}
           aria-label="Previous Day"
           tabIndex={0}
         >
-          <svg className="w-5 h-5 sm:w-8 sm:h-8 text-white group-hover:text-blue-300 transition" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+          <svg className="w-5 h-5 sm:w-8 sm:h-8 portrait:w-8 portrait:h-8 text-white group-hover:text-blue-300 transition" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
         <button
           className={`absolute right-0 top-1/2 -translate-y-1/2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-40 disabled:cursor-not-allowed
-            w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center rounded-full border-2 border-gray-400 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-700 shadow-xl hover:from-blue-900 hover:to-gray-800 group pointer-events-auto`}
+            w-10 h-10 sm:w-16 sm:h-16 portrait:w-16 portrait:h-16 flex items-center justify-center rounded-full border-2 border-gray-400 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-700 shadow-xl hover:from-blue-900 hover:to-gray-800 group pointer-events-auto`}
           onClick={handleNext}
           disabled={!canGoNext}
           aria-label="Next Day"
           tabIndex={0}
         >
-          <svg className="w-5 h-5 sm:w-8 sm:h-8 text-white group-hover:text-blue-300 transition" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+          <svg className="w-5 h-5 sm:w-8 sm:h-8 portrait:w-8 portrait:h-8 text-white group-hover:text-blue-300 transition" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
         </button>
