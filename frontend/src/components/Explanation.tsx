@@ -10,7 +10,6 @@ const Explanation: React.FC<{ text: string }> = ({ text }) => {
       className="w-full bg-gray-600/20 border border-gray-500/30 rounded-xl shadow-sm p-3 mt-1"
       style={{ wordBreak: 'break-word' }}
     >
-      <h2 className="text-lg font-semibold mb-2 text-center" style={{ color: 'bisque' }}>{first}</h2>
       {breakParagraphs(rest, 200).map((para, idx) => (
         <p key={idx} className="mb-4 last:mb-0 w-full max-w-full">{para}</p>
       ))}
