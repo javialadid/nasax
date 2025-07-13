@@ -122,7 +122,7 @@ const EpicView: React.FC = () => {
           Next Day
         </button>
       </div>
-      <div className="flex flex-col lg:flex-row items-stretch justify-center w-full flex-1 min-h-0 gap-4">
+      <div className="flex flex-col landscape:flex-row items-stretch justify-center w-full flex-1 min-h-0 gap-4">
         {/* Image Area */}
         <div className="flex-1 flex items-center justify-center min-h-0 h-full w-full">
           <div
@@ -140,26 +140,22 @@ const EpicView: React.FC = () => {
           </div>
         </div>
         {/* Metadata Sidebar - like NasaRoversView */}
-        <div className="w-full lg:w-[22ch] lg:mt-0 flex-shrink-0 bg-gray-900 bg-opacity-90 rounded-xl p-2 lg:p-3 text-gray-200 shadow-lg overflow-y-auto lg:h-full mt-2 lg:mt-0">
+        <div className="w-full landscape:w-[22ch] landscape:mt-0 flex-shrink-0 bg-gray-900 bg-opacity-90 rounded-xl p-2 landscape:p-3 text-gray-200 shadow-lg overflow-y-auto landscape:h-full mt-2 landscape:mt-0">
           <div className="mb-1">
-            <div className="font-semibold text-base lg:text-lg mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
-              <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5 text-blue-300' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 3v18m9-9H3' /></svg>
-              EPIC Image
-            </div>
-            {currentImg ? (
+            
+            {currentImg ? (              
               <ul className="text-sm space-y-2">
-                <li className="pt-2 border-gray-700 mt-2">
-                  <div className="font-semibold text-blue-200 mb-0.5">Caption</div>
+                <li>
+                  <div className="font-semibold text-blue-200 mb-0.5">Image</div>
+                  <div className="break-words">{carouselIdx + 1} / {data.length}</div>
+                </li>
+                <li className="pt-2 border-gray-700 mt-2">                  
                   <div className="break-words whitespace-pre-line">{currentImg.caption}</div>
                 </li>
                 <li>
                   <div className="font-semibold text-blue-200 mb-0.5">Date</div>
                   <div className="break-words">{currentImg.date}</div>
-                </li>
-                <li>
-                  <div className="font-semibold text-blue-200 mb-0.5">Image</div>
-                  <div className="break-words">{carouselIdx + 1} / {data.length}</div>
-                </li>
+                </li>                
                 <li>
                   <div className="font-semibold text-blue-200 mb-0.5">Image Name</div>
                   <div className="break-words">{currentImg.image}</div>
@@ -167,7 +163,17 @@ const EpicView: React.FC = () => {
                 {currentImg.centroid_coordinates && (
                   <li>
                     <div className="font-semibold text-blue-200 mb-0.5">Centroid Coordinates</div>
-                    <div className="break-words">Lat: {currentImg.centroid_coordinates.lat}, Lon: {currentImg.centroid_coordinates.lon}</div>
+                    <div className="break-words">Lat: {currentImg.centroid_coordinates.lat}</div>
+                    <div className="break-words">Lon: {currentImg.centroid_coordinates.lon}</div>
+                    <a
+                      href={`https://www.google.com/maps/`+
+                      `@${currentImg.centroid_coordinates.lat},${currentImg.centroid_coordinates.lon},6z`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 underline mt-1 inline-block"
+                    >
+                      View on Google Maps
+                    </a>
                   </li>
                 )}
               </ul>
@@ -181,4 +187,4 @@ const EpicView: React.FC = () => {
   );
 };
 
-export default EpicView; 
+export default EpicView;
