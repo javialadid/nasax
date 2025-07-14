@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getApiBaseUrl } from '../utils/env';
 
-const DEFAULT_IMAGE = '/default-rover.png'; // Place a default image in public/
+const DEFAULT_IMAGE = '/rovers_card.png'; // Place a default image in public/
 const DEFAULT_TITLE = 'Mars Rovers';
 const ROVERS = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
 
@@ -18,12 +18,16 @@ const NasaRoversCard: React.FC = () => {
     let isMounted = true;
     setLoading(true);
     Promise.all(
-      ROVERS.map(rover =>
-        fetch(`${getApiBaseUrl()}/mars-photos/api/v1/rovers/${rover}/latest_photos`)
-          .then(res => res.json())
-          .then(json => ({ rover, photo: json.latest_photos?.[0] || null }))
-          .catch(() => ({ rover, photo: null }))
-      )
+      ROVERS.map(async rover => {
+        try {
+          const res = await fetch(`${getApiBaseUrl()}/mars-photos/api/v1/rovers/${rover}/latest_photos`);
+          const json = await res.json();
+          const photo = json.latest_photos?.[0] || null;
+          return { rover, photo };
+        } catch {
+          return { rover, photo: null };
+        }
+      })
     ).then(results => {
       if (!isMounted) return;
       const valid = results.filter(r => r.photo);
@@ -54,6 +58,7 @@ const NasaRoversCard: React.FC = () => {
           height={CARD_IMG_HEIGHT}
           className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
+          onError={e => { e.currentTarget.src = DEFAULT_IMAGE; }}
         />
         {/* Always show the default title at the top */}
         <div className="absolute top-0 left-0 w-full bg-black/60 text-white text-lg font-semibold px-3 py-2 text-center truncate z-10">
@@ -68,7 +73,7 @@ const NasaRoversCard: React.FC = () => {
         )}
         {(!show && !loading) && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">
-            <div className="font-semibold text-base truncate">No rover images found.</div>
+            <div className="font-semibold text-base truncate"></div>
           </div>
         )}
         {loading && (

@@ -209,7 +209,7 @@ const Carousel = forwardRef<any, CarouselProps>(({
           return (
             <div
               key={i}
-              className="absolute top-0 left-0 w-full h-full overflow-hidden"
+              className="absolute top-0 left-0  overflow-hidden"
               style={{
                 opacity: currentIndex === i ? 1 : 0,
                 zIndex: currentIndex === i ? 20 : 10,
@@ -224,7 +224,7 @@ const Carousel = forwardRef<any, CarouselProps>(({
               <img
                 src={url}
                 alt={sortedAlts[i] || `Image ${i + 1}`}
-                className={`w-full h-full object-${imageFit} ${imageClassName}`}
+                className={`object-${imageFit} ${imageClassName}`}
                 style={{
                   ...imageStyle,
                   transform: `scale(${scaleX}, ${scaleY}) translate(${translateX}%, ${translateY}%)`,
@@ -250,19 +250,23 @@ const Carousel = forwardRef<any, CarouselProps>(({
           <button
             onClick={goPrev}
             disabled={totalImages <= 1}
-            className="z-250 absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 disabled:opacity-30 disabled:cursor-not-allowed text-white p-2 rounded-full transition-all"
-            aria-label="Previous image"
+            className="z-250 absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-200/10 
+            hover:bg-gray-200/50 disabled:opacity-30 disabled:cursor-not-allowed text-white p-2 
+            rounded-full transition-all"
+            aria-label="Previous image"            
           >
-            {'<'}
+            <span style={{textShadow: '2px 2px 4px black'}}>{'<'}</span>
           </button>
 
           <button
             onClick={goNext}
             disabled={totalImages <= 1}
-            className="z-250 absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 disabled:opacity-30 disabled:cursor-not-allowed text-white p-2 rounded-full transition-all"
+            className="z-250 absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-200/10 
+            hover:bg-gray-200/50 disabled:opacity-30 disabled:cursor-not-allowed text-white p-2 
+            rounded-full transition-all"
             aria-label="Next image"
           >
-            {'>'}
+            <span style={{textShadow: '2px 2px 4px black'}}>{'>'}</span>
           </button>
         </>
       )}

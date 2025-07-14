@@ -47,3 +47,18 @@ export function useNasaApi(endpoint: string, params: Record<string, string> = {}
 
   return { data, loading, error };
 }
+
+export async function nasaApiFetch(endpoint: string, params: Record<string, string> = {}) {
+  const baseUrl = getApiBaseUrl();
+  let url = `${baseUrl}/${endpoint}`;
+  const searchParams = new URLSearchParams(params);
+  if (endpoint === 'planetary/apod' && !params.date) {
+    searchParams.set('date', getEasternDateString());
+  }
+  if (Array.from(searchParams).length > 0) {
+    url += `?${searchParams.toString()}`;
+  }
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+  return resp.json();
+}

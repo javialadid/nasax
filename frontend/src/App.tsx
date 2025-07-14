@@ -10,7 +10,7 @@ import DonkiNotificationsView from './components/DonkiNotificationsView';
 import NasaRoversCard from './components/NasaRoversCard';
 import NasaRoversView from './components/views/NasaRoversView';
 import ScrollableView from './components/ScrollableView';
-const logo = '/logo-nasax2_192.png';
+const logo = '/logo_nasax_alpha.png';
 
 function App() {
   const location = useLocation();
@@ -27,26 +27,27 @@ function App() {
       <DeepSpaceBackground />
       <div className="w-full text-[var(--color-text)] z-10 overflow-hidden flex flex-col h-screen min-h-0">
         {/* Top Pane */}
-        <nav className="w-full h-12 sm:h-14 flex items-center justify-between px-2 sm:px-6 horizon-gradient bg-[#181c2f]/90 z-10 shadow-md relative" style={{backdropFilter: 'blur(2px)'}}>
+        <nav className="w-full h-12 sm:h-14 flex items-center justify-between px-2 sm:px-6 
+        bg-transparent z-10 shadow-md relative" style={{backdropFilter: 'blur(2px)'}}>
           <div className="flex items-center gap-2 sm:gap-3 h-full">
-            <Link to="/" className="flex items-center gap-2 sm:gap-3 h-full focus:outline-none">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 h-full focus:outline-none lg:mt-3">
               <img
                 src={logo}
                 alt="NasaX"
-                className="h-8 sm:h-16 object-contain hidden sm:block"
-                style={{ minWidth: 92 }}
+                className="h-8 sm:h-16 object-contain border border-gray-100/20 rounded landscape:h-6 sm:landscape:h-10"
+                style={{ minWidth: 64 }}
               />
-              <span className="text-base sm:text-xl font-bold tracking-wide">NasaX</span>
+              <span className="text-base sm:text-xl font-bold tracking-wide hidden lg:inline">NasaX</span>
             </Link>
           </div>
           {/* Centered navigation context */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-            <span className="text-sm sm:text-lg font-semibold text-white/90" 
-            >{getNavLabel(location.pathname)}</span>
+            <span className="text-sm sm:text-lg font-semibold text-white/90 landscape:text-xs sm:landscape:text-base">
+            {getNavLabel(location.pathname)}</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Dropdown menus will go here */}
-            <div className="w-16 sm:w-24 h-7 sm:h-8 bg-gray-700/30 rounded text-xs sm:text-sm flex items-center justify-center text-gray-300 cursor-pointer">
+            <div className="w-16 sm:w-24 h-7 sm:h-8 bg-gray-700/30 rounded text-xs sm:text-sm flex items-center justify-center text-gray-300 cursor-pointer landscape:w-12 sm:landscape:w-16 landscape:h-6 sm:landscape:h-7">
                 <Link to="/" className="flex items-center gap-2 sm:gap-3 h-full focus:outline-none">
               Home
               </Link>

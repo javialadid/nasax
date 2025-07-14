@@ -38,6 +38,6 @@ body {
   transition-delay: 0.8s;
 }
 .picture-shadow {
-  box-shadow: 0px -2px 25px #ffffff77;
+  box-shadow: 0px 1px 15px #ffffff36;
   border-radius: 25px;
 }
