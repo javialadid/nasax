@@ -137,38 +137,18 @@ const ApodView = () => {
   }
 
   return (
-    <div className="w-full min-h-screen px-2 py-2 mt-12">
-      {/* Navigation Header */}
-      <div className="w-full flex flex-row items-center justify-center gap-4 mb-2 mt-2 sm:landscape:gap-1 sm:landscape:mb-1 sm:landscape:mt-1">
-        <button
-          onClick={handlePrev}
-          disabled={!canGoPrev}
-          className="px-2 py-2 bg-gray-700/60 rounded-full disabled:opacity-40 flex items-center justify-center hover:bg-gray-600 transition"
-          aria-label="Previous Day"
-        >
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
-        <h1 className="text-lg font-semibold sm:landscape:text-base">{formatDateString(currentDate)}</h1>
-        <button
-          onClick={handleNext}
-          disabled={!canGoNext}
-          className="px-2 py-2 bg-gray-700/60 rounded-full disabled:opacity-40 flex items-center justify-center hover:bg-gray-600 transition"
-          aria-label="Next Day"
-        >
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 sm:landscape:grid-cols-3 lg:grid-cols-3 gap-3">
-        {/* Image Section */}
-        <div className="sm:landscape:col-span-2 lg:col-span-2">
-          <div 
-            className="bg-transparent rounded-xl p-2 cursor-pointer group relative"
+    <div className="p-4 h-[calc(100vh-4rem)] portrait:flex portrait:flex-col portrait:items-stretch landscape:flex landscape:items-start">
+      {/* Image Section */}
+      <div
+        className="
+          portrait:w-full portrait:mb-4 portrait:max-h-[60vh] portrait:flex-shrink-0
+          landscape:flex-shrink-0 landscape:max-w-[70vw] landscape:h-full landscape:mr-4
+        "
+        style={{ verticalAlign: 'top' }}
+      >
+        <div className="relative w-full h-full flex items-start justify-center">
+          <div
+            className="bg-transparent rounded-xl p-2 cursor-pointer group relative flex items-start justify-center w-full h-full"
             onClick={() => setShowZoomModal(true)}
           >
             {imageLoading && <SpinnerOverlay />}
@@ -176,7 +156,8 @@ const ApodView = () => {
               key={imageUrl}
               src={imageUrl}
               alt={data.title}
-              className="h-auto picture-shadow max-h-[calc(100vh-8rem)] object-contain rounded-lg mx-auto group-hover:opacity-90 transition-opacity"
+              className="picture-shadow object-contain rounded-lg mx-auto group-hover:opacity-90 transition-opacity self-start max-h-full max-w-full"
+              style={{ minHeight: 0, minWidth: 0, display: 'block' }}
               onLoad={() => {
                 log('Image loaded (onLoad handler)', { imageUrl, imageLoading });
                 setImageLoading(false);
@@ -192,37 +173,64 @@ const ApodView = () => {
             />
           </div>
         </div>
+      </div>
 
-        {/* Metadata Sidebar */}
-        <div className="bg-transparent rounded-xl p-2 space-y-3 max-h-[60vh] overflow-y-auto sm:landscape:overflow-y-auto sm:landscape:max-h-[75vh]">
-          <div>
-            <h2 className="text-base font-semibold text-blue-300 mb-2 flex items-center gap-2">
-              <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9.75 17L6 21h12l-3.75-4M12 3v14' />
-              </svg>
-              {data.title}
-            </h2>
-          </div>
-
-          <div className="space-y-2 text-sm">
-            <div className="flex flex-wrap items-center gap-4 mb-2">
-              <div className="font-semibold text-blue-200">Date:</div>
-              <div className="text-gray-300">{formatDateString(currentDate)}</div>
-              {data.copyright && (
-                <>
-                  <span className="text-gray-400">|</span>
-                  <div className="font-semibold text-blue-200">Copyright:</div>
-                  <div className="text-gray-300">{data.copyright}</div>
-                </>
-              )}
-            </div>
-            <div>
-              <div className="text-gray-300 leading-relaxed">
-                <Explanation text={data.explanation} />
-              </div>
-            </div>
-          </div>
+      {/* Metadata Section */}
+      <div
+        className="
+          rounded-lg shadow-md bg-gray-900/80 p-0 
+          portrait:w-full portrait:min-h-[25vh] portrait:max-h-[50vh] portrait:flex-grow
+          landscape:flex-grow landscape:min-w-[35vh] landscape:max-h-[75vh] landscape:text-sm 
+          landscape:md:text-base
+          flex flex-col min-h-0
+          text-sm smphone:text-base md:text-lg sm:p-0 md:p-2
+        "
+        style={{ verticalAlign: 'top' }}
+      >
+        {/* Navigation Buttons and Title Row */}
+        <div className="flex flex-row items-center gap-2 mb-4 justify-center w-full">
+          <button
+            onClick={handlePrev}
+            disabled={!canGoPrev}
+            className="px-2 py-2 bg-gray-700/60 rounded-full disabled:opacity-40 flex items-center justify-center hover:bg-gray-600 transition"
+            aria-label="Previous Day"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <h2 className="flex-1 font-bold text-blue-200 text-center mx-2 whitespace-normal">{data.title}</h2>
+          <button
+            onClick={handleNext}
+            disabled={!canGoNext}
+            className="px-2 py-2 bg-gray-700/60 rounded-full disabled:opacity-40 flex items-center justify-center hover:bg-gray-600 transition"
+            aria-label="Next Day"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
         </div>
+        <div className="text-gray-300 mb-2 flex flex-wrap items-center gap-4 justify-center text-center">
+          <div><span className="pl-2 font-semibold text-blue-200">Date:</span> {formatDateString(currentDate)}</div>
+          {data.copyright && (
+            <div className="flex items-center">
+              <span className="font-semibold text-blue-200">©</span>
+              <span
+                className="ml-1 text-xs truncate max-w-[10rem] inline-block align-bottom"
+                title={data.copyright}
+              >
+                {data.copyright.length > 20
+                  ? data.copyright.slice(0, 20) + '...'
+                  : data.copyright}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="text-gray-200 leading-relaxed overflow-y-auto min-h-0 flex-1">
+          <Explanation text={data.explanation} className="" />
+        </div>
+        
       </div>
 
       {/* Zoom Modal */}

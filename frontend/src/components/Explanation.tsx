@@ -1,13 +1,13 @@
 import React from 'react';
 import { breakParagraphs, firstSentence } from '../utils/stringutil';
 
-const Explanation: React.FC<{ text: string }> = ({ text }) => {
+const Explanation: React.FC<{ text: string, className?: string }> = ({ text, className }) => {
   const first = firstSentence(text);
   const rest = text.slice(first.length).trim();
 
   return (
     <div
-      className="w-full bg-gray-800/20 border border-gray-500/30 rounded-xl shadow-sm p-3 mt-1"
+      className={`${className} w-full bg-gray-800/20 border border-gray-500/30 rounded-xl shadow-sm p-3 mt-1`}
       style={{ wordBreak: 'break-word' }}
     >
       {breakParagraphs(rest, 200).map((para, idx) => (

@@ -10,6 +10,7 @@ import DonkiNotificationsView from './components/DonkiNotificationsView';
 import NasaRoversCard from './components/NasaRoversCard';
 import NasaRoversView from './components/views/NasaRoversView';
 import ScrollableView from './components/ScrollableView';
+import TestView from './components/views/TestView';
 const logo = '/logo_nasax_alpha.png';
 
 function App() {
@@ -56,7 +57,7 @@ function App() {
         </nav>
         {/* Main Content */}
         <main
-          className="flex-1 min-h-0 flex flex-col items-center justify-center w-full overflow-hidden"
+          className="flex-1 flex flex-col items-center justify-between w-full overflow-hidden"
         >
           <Routes>
             <Route path="/" element={
@@ -75,6 +76,7 @@ function App() {
             <Route path="/epic" element={<EpicView />} />
             <Route path="/donki" element={<DonkiNotificationsView />} />
             <Route path="/rovers" element={<NasaRoversView />} />
+            <Route path="/test" element={<TestView />} />
           </Routes>
         </main>
       </div>    

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@theme {
+  --breakpoint-smphone: 30rem;
+}
 
 :root {
   --color-bg: #ffffff;
