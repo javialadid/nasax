@@ -24,18 +24,41 @@ const NasaRoversView: React.FC = () => {
 
   const solTabs = solGroups.slice(0, 5);
   const [selectedSolIdx, setSelectedSolIdx] = useState(0);
+  const [selectedCamera, setSelectedCamera] = useState<string>('');
 
   useEffect(() => {
     setSelectedSolIdx(0);
   }, [selectedRover, solGroups.length]);
 
+  // Reset camera when sol or rover changes
+  useEffect(() => {
+    setSelectedCamera('');
+  }, [selectedSolIdx, selectedRover]);
+
   const currentSol = solTabs[selectedSolIdx]?.sol;
   const currentImages = solTabs[selectedSolIdx]?.images || [];
 
+  // Extract unique cameras for dropdown
+  const cameraOptions = useMemo(() => {
+    const cameras = Array.from(
+      new Set(currentImages.map(img => img.camera?.name))
+    ).filter(Boolean);
+    return cameras.map(name => {
+      const img = currentImages.find(img => img.camera?.name === name);
+      return { name, full_name: img?.camera?.full_name || name };
+    });
+  }, [currentImages]);
+
+  // Filter images by selected camera
+  const filteredImages = useMemo(() => {
+    if (!selectedCamera) return currentImages;
+    return currentImages.filter(img => img.camera?.name === selectedCamera);
+  }, [currentImages, selectedCamera]);
+
   const [imageIndices, setImageIndices] = useState<{ [key: string]: number }>({});
-  const currentTabKey = `${rover}-${currentSol}`;
+  const currentTabKey = `${rover}-${currentSol}-${selectedCamera}`;
   const currentImageIdx = imageIndices[currentTabKey] || 0;
-  const currentImage = currentImages[currentImageIdx] || null;
+  const currentImage = filteredImages[currentImageIdx] || null;
 
   const handleIndexChange = (idx: number) => {
     setImageIndices(prev => ({ ...prev, [currentTabKey]: idx }));
@@ -49,11 +72,11 @@ const NasaRoversView: React.FC = () => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setShowFullscreen(false);
       if (e.key === 'ArrowLeft') handleIndexChange(Math.max(0, currentImageIdx - 1));
-      if (e.key === 'ArrowRight') handleIndexChange(Math.min(currentImages.length - 1, currentImageIdx + 1));
+      if (e.key === 'ArrowRight') handleIndexChange(Math.min(filteredImages.length - 1, currentImageIdx + 1));
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showFullscreen, currentImageIdx, currentImages.length]);
+  }, [showFullscreen, currentImageIdx, filteredImages.length]);
 
   useEffect(() => {
     transformRef.current?.resetTransform();
@@ -88,6 +111,26 @@ const NasaRoversView: React.FC = () => {
               ))}
             </div>
           )}
+          {/* Camera Dropdown */}
+          {cameraOptions.length > 1 && (
+            <div className="flex items-center gap-2 border-l border-gray-600 pl-2">
+              <label htmlFor="camera-select" className="text-xs font-semibold text-gray-400">Camera:</label>
+              <select
+                id="camera-select"
+                className="bg-gray-700 text-white rounded-md px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                value={selectedCamera}
+                onChange={e => {
+                  setSelectedCamera(e.target.value);
+                  setImageIndices(prev => ({ ...prev, [currentTabKey]: 0 }));
+                }}
+              >
+                <option value="">All</option>
+                {cameraOptions.map(cam => (
+                  <option key={cam.name} value={cam.name}>{cam.full_name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
@@ -99,16 +142,17 @@ const NasaRoversView: React.FC = () => {
         >
           {loading && <SpinnerOverlay />}
           {error && <div className="text-red-400">Error: {error.message}</div>}
-          {!loading && !error && !currentImages.length && (
+          {!loading && !error && !filteredImages.length && (
             <div className="flex items-center justify-center text-gray-400">
-              No images found for {rover}.
+              No images found for {rover}{selectedCamera ? ` (${cameraOptions.find(c => c.name === selectedCamera)?.full_name || selectedCamera})` : ''}.
             </div>
           )}
-          {!loading && !error && currentImages.length > 0 && (
+          {!loading && !error && filteredImages.length > 0 && (
             <Carousel
-              imageUrls={currentImages.map(img => img.img_src)}
-              altTexts={currentImages.map(img => img.earth_date || rover)}
-              className="picture-shadow"
+              showThumbnails={true}
+              imageUrls={filteredImages.map(img => img.img_src)}
+              altTexts={filteredImages.map(img => img.earth_date || rover)}
+              className=""
               imageClassName="object-contain max-w-full max-h-full"
               onIndexChange={handleIndexChange}
               onImageClick={() => setShowFullscreen(true)}
@@ -126,7 +170,7 @@ const NasaRoversView: React.FC = () => {
                 {currentImage.rover?.name || rover}
               </h2>
               <ul className="text-sm space-y-2">
-                <li><strong>Image:</strong> {currentImageIdx + 1} / {currentImages.length}</li>
+                <li><strong>Image:</strong> {currentImageIdx + 1} / {filteredImages.length}</li>
                 <li><strong>Status:</strong> {currentImage.rover?.status}</li>
                 <li><strong>Sol:</strong> {currentImage.sol}</li>
                 <li><strong>Earth Date:</strong> {currentImage.earth_date}</li>
@@ -154,7 +198,7 @@ const NasaRoversView: React.FC = () => {
           </TransformWrapper>
           <button onClick={() => setShowFullscreen(false)} className="absolute top-4 right-4 text-white text-2xl">&times;</button>
           <button onClick={() => handleIndexChange(currentImageIdx - 1)} disabled={currentImageIdx === 0} className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl disabled:opacity-50">&lt;</button>
-          <button onClick={() => handleIndexChange(currentImageIdx + 1)} disabled={currentImageIdx === currentImages.length - 1} className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl disabled:opacity-50">&gt;</button>
+          <button onClick={() => handleIndexChange(currentImageIdx + 1)} disabled={currentImageIdx === filteredImages.length - 1} className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl disabled:opacity-50">&gt;</button>
         </div>
       )}
     </div>

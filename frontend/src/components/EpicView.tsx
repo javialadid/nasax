@@ -263,15 +263,16 @@ const EpicView: React.FC = () => {
       >
         <div className="w-full h-full flex items-center justify-center  flex-shrink-0">
           <Carousel
+            showThumbnails={true}
             imageUrls={imageUrls}
             order={"desc"}
             onIndexChange={setCarouselIdx}
             currentIndex={carouselIdx}
             autoPlay={autoPlay}
-            cropLeft={0}
-            cropRight={0}
-            cropTop={0}
-            cropBottom={0}
+            cropLeft={0.09}
+            cropRight={0.09}
+            cropTop={0.09}
+            cropBottom={0.09}
             imageFit="contain"
             className="picture-shadow "
             imageClassName="picture-shadow w-full h-full object-contain rounded-lg mx-auto 
@@ -338,13 +339,14 @@ const EpicView: React.FC = () => {
                   </span>
                 </div>
               </li>
-              <li className="pt-2 border-gray-700 mt-2">
-                <div className="break-words whitespace-pre-line">{currentImg.caption}</div>
-              </li>
               <li>
                 <div className="font-semibold text-blue-200 mb-0.5">Date</div>
                 <div className="break-words">{currentImg.date}</div>
               </li>
+              <li className="pt-2 border-gray-700 mt-2">
+                <div className="break-words whitespace-pre-line">{currentImg.caption}</div>
+              </li>
+              
               <li>
                 <div className="font-semibold text-blue-200 mb-0.5">Image Name</div>
                 <div className="break-words">{currentImg.image}</div>

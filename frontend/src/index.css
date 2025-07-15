@@ -1,0 +1,18 @@
+/* Custom scrollbar for carousel thumbnails */
+.carousel-thumbnails-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db00 #0000; /* thumb, track (transparent track) */
+}
+.carousel-thumbnails-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  background: transparent;
+}
+.carousel-thumbnails-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(209, 213, 219, 0.8); /* light gray */
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.carousel-thumbnails-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+} 

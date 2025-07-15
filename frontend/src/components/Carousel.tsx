@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from 'react';
+import CarouselThumbnailBar from './CarouselThumbnailBar';
+import CarouselMain from './CarouselMain';
+import CarouselIndicators from './CarouselIndicators';
+import CarouselControls from './CarouselControls';
 
 /**
  * CarouselProps defines the props for the Carousel component.
@@ -45,9 +49,12 @@ interface CarouselProps {
   showPlayPause?: boolean;
   onImageClick?: (index: number) => void;
   currentIndex?: number; 
+  onImageError?: (event: React.SyntheticEvent<HTMLImageElement>, index: number) => void;
+  showThumbnails?: boolean; // Add this line
+  thumbnailsAutohideTimeout?: number;
 }
 
-const DEFAULT_CROP = 0.009;
+const DEFAULT_CROP = 0;
 
 const Carousel = forwardRef<any, CarouselProps>(({
   imageUrls = [],
@@ -71,6 +78,9 @@ const Carousel = forwardRef<any, CarouselProps>(({
   showPlayPause = true,
   onImageClick,
   currentIndex: controlledIndex, // Add this line
+  onImageError,
+  showThumbnails = false, // Add this line
+  thumbnailsAutohideTimeout = 2000,
 }, ref) => {
   const [uncontrolledIndex, setUncontrolledIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
@@ -188,6 +198,36 @@ const Carousel = forwardRef<any, CarouselProps>(({
     );
   }
 
+  // Fallback image (SVG data URI)
+  const FALLBACK_IMAGE =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+        <rect width="100%" height="100%" fill="none"/>
+        <g>
+          <rect x="100" y="125" width="200" height="50" rx="12" fill="white" fill-opacity="0.7"/>
+          <text x="200" y="155" text-anchor="middle" dominant-baseline="middle" fill="#444" font-size="24" font-family="sans-serif">No Image</text>
+        </g>
+      </svg>
+    `);
+
+  // Track which images failed
+  const [errorImages, setErrorImages] = useState<{ [idx: number]: boolean }>({});
+
+  // --- Thumbnails autohide logic ---
+  // Remove handleThumbnailsMouseEnter, handleThumbnailsMouseLeave, handleThumbnailsFocus, handleThumbnailsBlur, handleThumbnailsTouchStart, handleThumbnailsTouchEnd, and related autohide logic from Carousel.tsx
+  // Only keep the onThumbnailSelect handler for click events
+  // ... existing code ...
+
+  // Handlers for thumbnail bar
+  const handleThumbnailSelect = (idx: number) => {
+    if (typeof controlledIndex === 'number') {
+      onIndexChange(idx);
+    } else {
+      setUncontrolledIndex(idx);
+    }
+  };
+
   return (
     <div
       className={`relative bg-black rounded-lg overflow-hidden w-full h-full ${className} group`}
@@ -198,41 +238,59 @@ const Carousel = forwardRef<any, CarouselProps>(({
       aria-live="polite"
       role="region"
     >
-      <div className="relative w-full h-full">
-        {sortedImages.map((url, i) => (
-          <div
-            key={i}
-            className={`absolute inset-0 w-full h-full flex items-center justify-center transition-opacity duration-700 ${currentIndex === i ? 'opacity-100 pointer-events-auto z-20' : 'opacity-0 pointer-events-none z-10'}`}
-            aria-hidden={currentIndex !== i}
-            role="group"
-            aria-roledescription="slide"
-            aria-label={`Image ${i + 1} of ${totalImages}`}
-          >
-            <img
-              src={url}
-              alt={sortedAlts[i] || `Image ${i + 1}`}
-              className={`object-${imageFit} ${imageClassName}`}
-              style={{
-                ...imageStyle,
-                objectFit: imageFit,
-                cursor: typeof onImageClick === 'function' ? 'zoom-in' : undefined,
-                width: '100%',
-                height: '100%',
-                maxHeight: '100%',
-                maxWidth: '100%',
-              }}
-              draggable={false}
-              onLoad={() => {
-                setLoadedImages(prev => ({ ...prev, [url]: true }));
-              }}
-              onClick={e => {
-                if (typeof onImageClick === 'function') onImageClick(i);
-              }}
-            />
-          </div>
-        ))}
-      </div>
-
+      {/* Thumbnail Mosaic */}
+      {showThumbnails && totalImages > 0 && (
+        <CarouselThumbnailBar
+          sortedImages={sortedImages}
+          sortedAlts={sortedAlts}
+          currentIndex={currentIndex}
+          errorImages={errorImages}
+          onThumbnailSelect={handleThumbnailSelect}
+          autohideTimeout={thumbnailsAutohideTimeout}
+        />
+      )}
+      {/* On mobile, tap anywhere on the carousel to show thumbnails */}
+      {showThumbnails && totalImages > 0 && (
+        <div
+          className="absolute left-0 top-0 w-full carousel-thumbnails-scrollbar"
+          style={{
+            height: 128,
+            zIndex: 25,
+            pointerEvents: 'auto',
+            background: 'transparent',
+            overflowY: 'hidden',
+          }}
+          onTouchStart={e => {
+            e.stopPropagation();
+            // Block the next click event globally to prevent ghost click
+            const blockClick = (evt: MouseEvent) => {
+              evt.preventDefault();
+              evt.stopImmediatePropagation();
+              window.removeEventListener('click', blockClick, true);
+            };
+            window.addEventListener('click', blockClick, true);
+            // No setShowThumbnailsBar here; let the bar handle its own autohide
+          }}
+        />
+      )}
+      <CarouselMain
+        sortedImages={sortedImages}
+        sortedAlts={sortedAlts}
+        currentIndex={currentIndex}
+        cropLeft={cropLeft}
+        cropRight={cropRight}
+        cropTop={cropTop}
+        cropBottom={cropBottom}
+        imageStyle={imageStyle}
+        imageFit={imageFit}
+        errorImages={errorImages}
+        onImageClick={onImageClick}
+        onImageError={onImageError}
+        setLoadedImages={setLoadedImages}
+        loadedImages={loadedImages}
+        imageClassName={imageClassName}
+        FALLBACK_IMAGE={FALLBACK_IMAGE}
+      />
       {showArrows && (
         <>
           <button
@@ -258,88 +316,25 @@ const Carousel = forwardRef<any, CarouselProps>(({
           </button>
         </>
       )}
-
       <div className="absolute bottom-8 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm">
         {currentIndex + 1} / {totalImages}
       </div>
-
       {showIndicators && (
-        <div className="z-40 absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300">
-          {(() => {
-            const VISIBLE_DOTS = 12;
-            let start = 0;
-            let end = totalImages;
-            if (totalImages > VISIBLE_DOTS) {
-              const half = Math.floor(VISIBLE_DOTS / 2);
-              if (currentIndex <= half) {
-                start = 0;
-                end = VISIBLE_DOTS;
-              } else if (currentIndex >= totalImages - half - 1) {
-                start = totalImages - VISIBLE_DOTS;
-                end = totalImages;
-              } else {
-                start = currentIndex - half;
-                end = currentIndex + half + 1;
-              }
-            }
-            return sortedImages.slice(start, end).map((_, idx) => {
-              const actualIndex = start + idx;
-              const isCurrent = actualIndex === currentIndex;
-              return (
-                <button
-                  key={actualIndex}
-                  onClick={() => {
-                    if (typeof controlledIndex === 'number') {
-                      onIndexChange(actualIndex);
-                    } else {
-                      setUncontrolledIndex(actualIndex);
-                    }
-                  }}
-                  className={`w-3 h-3 rounded-full transition-all border-2 flex items-center justify-center focus:outline-none ${
-                    isCurrent
-                      ? 'bg-white border-blue-500 ring-2 ring-blue-400' // current dot: white with blue ring
-                      : 'bg-white bg-opacity-50 border-transparent hover:bg-opacity-70'
-                  }`}
-                  aria-label={`Go to image ${actualIndex + 1}`}
-                  aria-current={isCurrent}
-                  style={{ boxSizing: 'border-box' }}
-                >
-                  {/* Optionally, add a dot inside for the ring effect */}
-                  {isCurrent && <span className="block w-1.5 h-1.5 bg-blue-500 rounded-full"></span>}
-                </button>
-              );
-            });
-          })()}
-        </div>
+        <CarouselIndicators
+          totalImages={totalImages}
+          currentIndex={currentIndex}
+          onIndicatorClick={handleThumbnailSelect}
+        />
       )}
-
       {showPlayPause && (
-        <div className="z-50 absolute bottom-4 right-4 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
-          <button
-            onClick={() => setIsPlaying(p => !p)}
-            className="bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-full transition-all"
-            aria-label={isPlaying ? 'Pause' : 'Play'}
-          >
-            {isPlaying ? '❚❚' : '▶'}
-          </button>
-          <div className="flex flex-col items-center text-xs text-white bg-black bg-opacity-50 rounded px-2 py-1">
-            <label htmlFor="carousel-speed" className="mb-1">Speed</label>
-            <input
-              id="carousel-speed"
-              type="range"
-              min={playbackSpeedMin}
-              max={playbackSpeedMax}
-              step={50}
-              value={playbackSpeedMax - (playbackSpeed - playbackSpeedMin)}
-              onChange={e => {
-                const sliderValue = Number(e.target.value);
-                setPlaybackSpeed(playbackSpeedMax - (sliderValue - playbackSpeedMin));
-              }}
-              className="w-20"
-              aria-label="Playback speed"
-            />
-          </div>
-        </div>
+        <CarouselControls
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          playbackSpeed={playbackSpeed}
+          setPlaybackSpeed={setPlaybackSpeed}
+          playbackSpeedMin={playbackSpeedMin}
+          playbackSpeedMax={playbackSpeedMax}
+        />
       )}
     </div>
   );
