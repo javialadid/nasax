@@ -19,6 +19,7 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
 }) => {
   const [showThumbnailsBar, setShowThumbnailsBar] = useState(true);
   const [isThumbnailsInteracting, setIsThumbnailsInteracting] = useState(false);
+  const [isUserInteracting, setIsUserInteracting] = useState(false);
   const thumbnailsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dragScrollRef = useRef<HTMLDivElement | null>(null);
   const dragState = useRef({
@@ -32,60 +33,67 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
   });
   // Refs for each thumbnail button
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const prevShowThumbnailsBar = useRef(showThumbnailsBar);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Track if a user-initiated scroll is happening (for touch devices)
+  const userScrollActive = useRef(false);
 
-  // Autohide logic
-  const showAndResetThumbnailsBar = () => {
+  const startAutohideTimer = () => {
+    if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
+    thumbnailsTimeoutRef.current = setTimeout(() => {
+      setShowThumbnailsBar(false);
+      setIsUserInteracting(false);
+      userScrollActive.current = false;
+      console.log('[CarouselThumbnailBar] Autohide: hiding bar, isUserInteracting=false');
+    }, autohideTimeout);
+    console.log('[CarouselThumbnailBar] Autohide timer started/reset');
+  };
+  const handleUserInteractionStart = (source = 'unknown') => {
+    setIsUserInteracting(true);
     setShowThumbnailsBar(true);
-    if (!isThumbnailsInteracting) {
-      if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
-      thumbnailsTimeoutRef.current = setTimeout(() => setShowThumbnailsBar(false), autohideTimeout);
-    }
+    startAutohideTimer();
+    userScrollActive.current = true;
+    console.log(`[CarouselThumbnailBar] User interaction start (${source})`);
   };
-  const handleMouseEnter = () => {
-    setIsThumbnailsInteracting(true);
-    setShowThumbnailsBar(true);
-    if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
+  const handleUserInteractionEnd = (source = 'unknown') => {
+    startAutohideTimer();
+    userScrollActive.current = false;
+    console.log(`[CarouselThumbnailBar] User interaction end (${source})`);
   };
-  const handleMouseLeave = () => {
-    setIsThumbnailsInteracting(false);
-    if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
-    thumbnailsTimeoutRef.current = setTimeout(() => setShowThumbnailsBar(false), autohideTimeout);
-  };
-  const handleFocus = () => {
-    setIsThumbnailsInteracting(true);
-    setShowThumbnailsBar(true);
-    if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
-  };
-  const handleBlur = () => {
-    setIsThumbnailsInteracting(false);
-    if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
-    thumbnailsTimeoutRef.current = setTimeout(() => setShowThumbnailsBar(false), autohideTimeout);
-  };
-  const handleTouchStart = () => {
-    setIsThumbnailsInteracting(true);
-    setShowThumbnailsBar(true);
-    if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
-  };
-  const handleTouchEnd = () => {
-    setIsThumbnailsInteracting(false);
-    if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
-    thumbnailsTimeoutRef.current = setTimeout(() => setShowThumbnailsBar(false), autohideTimeout);
-  };
+  const handleMouseEnter = () => handleUserInteractionStart('mouseenter');
+  const handleMouseLeave = () => handleUserInteractionEnd('mouseleave');
+  const handleFocus = () => handleUserInteractionStart('focus');
+  const handleBlur = () => handleUserInteractionEnd('blur');
+  const handleTouchStart = () => handleUserInteractionStart('touchstart');
+  const handleTouchEnd = () => handleUserInteractionEnd('touchend');
+  const handlePointerDown = () => handleUserInteractionStart('pointerdown');
+
+  // Always run autohide timer when bar is visible and user is not interacting
   useEffect(() => {
-    setShowThumbnailsBar(true);
-    if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
-    thumbnailsTimeoutRef.current = setTimeout(() => setShowThumbnailsBar(false), autohideTimeout);
+    if (showThumbnailsBar && !isUserInteracting) {
+      startAutohideTimer();
+    }
     return () => {
       if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
     };
-  }, [autohideTimeout]);
+  }, [showThumbnailsBar, isUserInteracting, autohideTimeout]);
+
+  // Only show bar on mount
+  useEffect(() => {
+    setShowThumbnailsBar(true);
+  }, []);
+
+  // Utility to detect touch device
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
   useEffect(() => {
+    if (isTouchDevice) return; // Only attach pointer drag for non-touch devices
     const el = dragScrollRef.current;
     if (!el) return;
     const THRESHOLD = 5; // px
-    const handlePointerDown = (e: PointerEvent) => {
+    const handlePointerDownEvent = (e: PointerEvent) => {
       if (e.button !== 0) return; // Only left mouse button
+      handlePointerDown();
       dragState.current.isDragging = true;
       dragState.current.startX = e.clientX;
       dragState.current.startY = e.clientY;
@@ -126,26 +134,58 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
       dragState.current.lastIndex = null;
       el.releasePointerCapture(e.pointerId);
       el.style.cursor = 'grab';
+      handleUserInteractionEnd('pointerup');
     };
-    el.addEventListener('pointerdown', handlePointerDown);
+    el.addEventListener('pointerdown', handlePointerDownEvent);
     el.addEventListener('pointermove', handlePointerMove);
     el.addEventListener('pointerup', handlePointerUp);
     el.addEventListener('pointercancel', handlePointerUp);
     return () => {
-      el.removeEventListener('pointerdown', handlePointerDown);
+      el.removeEventListener('pointerdown', handlePointerDownEvent);
       el.removeEventListener('pointermove', handlePointerMove);
       el.removeEventListener('pointerup', handlePointerUp);
       el.removeEventListener('pointercancel', handlePointerUp);
     };
-  }, [onThumbnailSelect]);
+  }, [onThumbnailSelect, isTouchDevice]);
+
+  // For touch devices, ensure autohide is triggered by scroll/touch, but only if user-initiated
+  useEffect(() => {
+    if (!isTouchDevice) return;
+    const el = dragScrollRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      if (userScrollActive.current) {
+        handleUserInteractionStart('scroll');
+        // After a short delay, reset userScrollActive
+        setTimeout(() => { userScrollActive.current = false; }, 100);
+      } else {
+        // Ignore programmatic scrolls
+        console.log('[CarouselThumbnailBar] Ignored programmatic scroll');
+      }
+    };
+    el.addEventListener('scroll', handleScroll);
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+    };
+  }, [autohideTimeout, isTouchDevice]);
 
   useEffect(() => {
-    // Scroll the current thumbnail into view when currentIndex changes
-    const btn = buttonRefs.current[currentIndex];
-    if (btn) {
-      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    // When the bar collapses (showThumbnailsBar goes from true to false), scroll to current index
+    if (prevShowThumbnailsBar.current && !showThumbnailsBar) {
+      // Wait for the opacity transition to finish (500ms)
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        const btn = buttonRefs.current[currentIndex];
+        if (btn) {
+          btn.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+        }
+      }, 500);
     }
-  }, [currentIndex]);
+    prevShowThumbnailsBar.current = showThumbnailsBar;
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, [showThumbnailsBar, currentIndex]);
 
   return (
     <>
@@ -197,6 +237,7 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
             key={i}
             ref={el => { buttonRefs.current[i] = el; }}
             data-thumb-index={i}
+            onClick={isTouchDevice ? () => onThumbnailSelect(i) : undefined}
             style={{
               border: currentIndex === i ? '2px solid #3b82f6' : '2px solid transparent',
               borderRadius: 6,
