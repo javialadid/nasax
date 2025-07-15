@@ -55,7 +55,7 @@ const ApodView = () => {
   const [currentDate, setCurrentDate] = useState(() => {
     const urlDate = searchParams.get('date');
     const initialDate = urlDate ? clampDateToRange(urlDate, oldestAllowed, today) : today;
-    log('Initialized currentDate', { initialDate, urlDate, today });
+    
     return initialDate;
   });
   const [showZoomModal, setShowZoomModal] = useState(false);
@@ -67,7 +67,7 @@ const ApodView = () => {
 
   // Log API response for debugging
   useEffect(() => {
-    log('API response', { data, loading, error, currentDate });
+    //log('API response', { data, loading, error, currentDate });
   }, [data, loading, error, currentDate]);
 
   // Auto-retry logic when no data is returned
@@ -80,8 +80,7 @@ const ApodView = () => {
         setRetryCount(count => count + 1);
         setSearchParams({ date: prevDate }, { replace: true });
       }
-    } else if (data?.url) {
-      log('Data found, resetting retryCount', { retryCount });
+    } else if (data?.url) {      
       setRetryCount(0);
     }
   }, [data, loading, currentDate, oldestAllowed, retryCount, setSearchParams]);
@@ -119,32 +118,31 @@ const ApodView = () => {
   const imageUrl = data?.hdurl || data?.url;
 
   // Loading and error states
-  if (loading && !data) {
-    log('Rendering loading state', { loading, data });
+  if (loading && !data) {    
     return <SpinnerOverlay />;
   }
-  if (error) {
-    log('Rendering error state', { error });
+  if (error) {    
     return <div className="text-red-500 text-center my-8">Error: {error.message}</div>;
   }
   if (retryCount >= MAX_DAYS_BACK) {
     log('Max retries reached', { retryCount, MAX_DAYS_BACK });
     return <div className="text-gray-400 text-center my-8">No APOD found for the last {MAX_DAYS_BACK} days.</div>;
   }
-  if (!data?.title || !data?.url || !data?.explanation) {
-    log('No valid data available', { data });
+  if (!data?.title || !data?.url || !data?.explanation) {    
     return <div className="text-gray-400 text-center my-8">No data available.</div>;
   }
 
   return (
-    <div className="p-4 h-[calc(100vh-4rem)] portrait:flex portrait:flex-col portrait:items-stretch landscape:flex landscape:items-start">
+    <div className="p-4 h-[calc(100vh-4rem)] flex
+    portrait:flex-col portrait:items-stretch 
+    landscape:items-start">
       {/* Image Section */}
       <div
         className="
           portrait:w-full portrait:mb-4 portrait:max-h-[60vh] portrait:flex-shrink-0
           landscape:flex-shrink-0 landscape:max-w-[70vw] landscape:h-full landscape:mr-4
         "
-        style={{ verticalAlign: 'top' }}
+        
       >
         <div className="relative w-full h-full flex items-start justify-center">
           <div
@@ -158,16 +156,14 @@ const ApodView = () => {
               alt={data.title}
               className="picture-shadow object-contain rounded-lg mx-auto group-hover:opacity-90 transition-opacity self-start max-h-full max-w-full"
               style={{ minHeight: 0, minWidth: 0, display: 'block' }}
-              onLoad={() => {
-                log('Image loaded (onLoad handler)', { imageUrl, imageLoading });
+              onLoad={() => {                
                 setImageLoading(false);
               }}
               onError={() => {
                 log('Image failed to load (onError handler)', { imageUrl, imageLoading });
                 setImageLoading(false);
               }}
-              onLoadStart={() => {
-                log('Image loading started (onLoadStart handler)', { imageUrl });
+              onLoadStart={() => {                
                 setImageLoading(true);
               }}
             />

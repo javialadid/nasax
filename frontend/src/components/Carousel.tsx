@@ -199,50 +199,38 @@ const Carousel = forwardRef<any, CarouselProps>(({
       role="region"
     >
       <div className="relative w-full h-full">
-        {sortedImages.map((url, i) => {
-          const cropX = cropLeft + cropRight;
-          const cropY = cropTop + cropBottom;
-          const scaleX = 1 / (1 - cropX);
-          const scaleY = 1 / (1 - cropY);
-          const translateX = ((cropLeft - cropRight) / 2) * 100 / (1 - cropX);
-          const translateY = ((cropTop - cropBottom) / 2) * 100 / (1 - cropY);
-          return (
-            <div
-              key={i}
-              className="absolute top-0 left-0  overflow-hidden"
+        {sortedImages.map((url, i) => (
+          <div
+            key={i}
+            className={`absolute inset-0 w-full h-full flex items-center justify-center transition-opacity duration-700 ${currentIndex === i ? 'opacity-100 pointer-events-auto z-20' : 'opacity-0 pointer-events-none z-10'}`}
+            aria-hidden={currentIndex !== i}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`Image ${i + 1} of ${totalImages}`}
+          >
+            <img
+              src={url}
+              alt={sortedAlts[i] || `Image ${i + 1}`}
+              className={`object-${imageFit} ${imageClassName}`}
               style={{
-                opacity: currentIndex === i ? 1 : 0,
-                zIndex: currentIndex === i ? 20 : 10,
-                transition: 'opacity 0.7s ease-in-out',
-                pointerEvents: currentIndex === i ? 'auto' : 'none',
+                ...imageStyle,
+                objectFit: imageFit,
+                cursor: typeof onImageClick === 'function' ? 'zoom-in' : undefined,
+                width: '100%',
+                height: '100%',
+                maxHeight: '100%',
+                maxWidth: '100%',
               }}
-              aria-hidden={currentIndex !== i}
-              role="group"
-              aria-roledescription="slide"
-              aria-label={`Image ${i + 1} of ${totalImages}`}
-            >
-              <img
-                src={url}
-                alt={sortedAlts[i] || `Image ${i + 1}`}
-                className={`object-${imageFit} ${imageClassName}`}
-                style={{
-                  ...imageStyle,
-                  transform: `scale(${scaleX}, ${scaleY}) translate(${translateX}%, ${translateY}%)`,
-                  transition: 'transform 0.7s ease-in-out',
-                  objectFit: imageFit,
-                  cursor: typeof onImageClick === 'function' ? 'zoom-in' : undefined,
-                }}
-                draggable={false}
-                onLoad={() => {
-                  setLoadedImages(prev => ({ ...prev, [url]: true }));
-                }}
-                onClick={e => {
-                  if (typeof onImageClick === 'function') onImageClick(i);
-                }}
-              />
-            </div>
-          );
-        })}
+              draggable={false}
+              onLoad={() => {
+                setLoadedImages(prev => ({ ...prev, [url]: true }));
+              }}
+              onClick={e => {
+                if (typeof onImageClick === 'function') onImageClick(i);
+              }}
+            />
+          </div>
+        ))}
       </div>
 
       {showArrows && (
