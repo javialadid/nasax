@@ -22,11 +22,11 @@ export const breakParagraphs = (text: string, minLength: number): string[] => {
 	return paragraphs.filter(Boolean);
   };
 
-export const firstSentence = ( text: string ) => {
-	if (!text) return '';
-	const match = text.match(/([\s\S]*?[.!?\n])(?=\s|$)/);
-	if (match) return match[0].trim();
-	return text;
+export const firstSentence = (text: string) => {
+  if (!text) return '';
+  const idx = text.search(/[.!?\n]/);
+  if (idx !== -1) return text.slice(0, idx + (text[idx] === '\n' ? 0 : 1)).trim();
+  return text;
 }
 
 export const getChunkBetween = (fullString: string, startString: string, endString: string): string | null => {
