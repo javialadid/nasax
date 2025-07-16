@@ -1,19 +1,19 @@
 import NodeCache from 'node-cache';
 
-// Default cache 24 horus, configurable via CACHE_DURATION env.
+// Default cache 24 hours, configurable via CACHE_DURATION env.
 const cacheTTL = parseInt(process.env.CACHE_DURATION||'') || (24 * 60 * 60);
 const memoryCache = new NodeCache({ stdTTL: cacheTTL });
 
 // Abstract cache interface for future extensibility
 export interface SimpleCache {
   get<T>(key: string): T | undefined;
-  set<T>(key: string, value: T): void;
+  set<T>(key: string, value: T, ttl?: number): void;
 }
 
 // In-memory cache implementation
 const cache: SimpleCache = {
   get: (key) => memoryCache.get(key),
-  set: (key, value) => { memoryCache.set(key, value, cacheTTL); },
+  set: (key, value, ttl) => { memoryCache.set(key, value, ttl ?? cacheTTL); },
 };
 
 /**
@@ -30,7 +30,7 @@ export function cacheKeyFromUrl(url: string): string {
     const urlObj = new URL(url);
     // Lowercase host and pathname
     urlObj.hostname = urlObj.hostname.toLowerCase();
-    urlObj.pathname = urlObj.pathname.replace(/\/+$/, '').toLowerCase().replace(/\/+/g, '/');
+    urlObj.pathname = urlObj.pathname.replace(/\/+$|\/+/g, '/').toLowerCase();
     // Remove default ports
     if ((urlObj.protocol === 'http:' && urlObj.port === '80') || 
 		(urlObj.protocol === 'https:' && urlObj.port === '443')) {

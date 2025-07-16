@@ -56,7 +56,6 @@ describe('cacheKeyFromUrl', () => {
     expect(results.size).toBe(1);
   });
     
-  
 }); 
 
 describe('cacheKeyFromUrl error handling', () => {
@@ -67,4 +66,4 @@ describe('cacheKeyFromUrl error handling', () => {
 	it('throws an error for undefined input', () => {
 	  expect(() => cacheKeyFromUrl(undefined as any)).toThrow();
 	});
-  });
+});
