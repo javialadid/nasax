@@ -1,8 +1,7 @@
 import React from 'react';
-import { useNasaApi } from '../hooks/useNasaApi';
-import { getEasternDateString, addDays } from '../utils/dateutil';
-import { DonkiReport } from './DonkiReport';
-import DonkiReportLlm from './DonkiReportLlm';
+import { useNasaApi } from '../../hooks/useNasaApi';
+import { getEasternDateString, addDays } from '../../utils/dateutil';
+import DonkiAiReport from '../DonkiAiReport';
 
 const API_ENDPOINT = 'DONKI/notifications';
 const today = getEasternDateString();
@@ -20,8 +19,8 @@ const DonkiNotificationsView: React.FC = () => {
     : [];
 
   return (
-    <div className="flex flex-col w-full max-w-3xl mx-auto min-h-0 h-full flex-1 py-8 px-2 overflow-auto">
-      <h1 className="text-3xl font-bold text-center mb-8">DONKI Reports</h1>
+    <div className="flex flex-col w-full max-w-3xl mx-auto min-h-0 h-full flex-1 py-2 px-2 overflow-auto">
+      
       {loading && <div className="text-center text-lg">Loading...</div>}
       {error && <div className="text-center text-red-500 text-lg">{typeof error === 'object' && 'message' in error ? error.message : String(error)}</div>}
       {!loading && !error && reports.length === 0 && (
@@ -30,8 +29,8 @@ const DonkiNotificationsView: React.FC = () => {
       <div className="flex flex-col gap-6">
         {reports.map((notif: any, idx: number) => (
           <div key={notif.messageIssueTime || idx}>
-            {notif.processedMessage && <DonkiReportLlm report={notif.processedMessage} />}
-            <DonkiReport rawContent={notif.messageBody} />
+            {notif.processedMessage && <DonkiAiReport data={notif.processedMessage} />}
+            {!notif.processedMessage && <div>No Data. Try again later.</div> }
           </div>
         ))}
       </div>

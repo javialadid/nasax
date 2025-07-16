@@ -74,7 +74,7 @@ const Carousel = forwardRef<any, CarouselProps>(({
   imageStyle = {},
   imageFit = 'contain',
   showArrows = true,
-  showIndicators = true,
+  showIndicators = false,
   showPlayPause = true,
   onImageClick,
   currentIndex: controlledIndex, // Add this line

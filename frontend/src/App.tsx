@@ -1,16 +1,18 @@
 
-import NasaCardApod from './components/NasaCardApod';
 import DeepSpaceBackground from './components/DeepSpaceBackground';
-import NasaCardEpic from './components/NasaCardEpic';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import ApodView from './components/ApodView';
-import EpicView from './components/EpicView';
+
+import ApodView from './components/views/ApodView';
+import EpicView from './components/views/EpicView';
+import DonkiNotificationsView from './components/views/DonkiView';
+import NasaRoversView from './components/views/RoversView';
+
+import NasaCardApod from './components/NasaCardApod';
 import NasaCardDonki from './components/NasaCardDonki';
-import DonkiNotificationsView from './components/DonkiNotificationsView';
+import NasaCardEpic from './components/NasaCardEpic';
 import NasaRoversCard from './components/NasaRoversCard';
-import NasaRoversView from './components/views/NasaRoversView';
+
 import ScrollableView from './components/ScrollableView';
-import TestView from './components/views/TestView';
 import { NasaCardDataProvider } from './NasaCardDataContext';
 const logo = '/logo_nasax_alpha.png';
 
@@ -77,8 +79,7 @@ function App() {
             <Route path="/apod" element={<ApodView />} />
             <Route path="/epic" element={<EpicView />} />
             <Route path="/donki" element={<DonkiNotificationsView />} />
-            <Route path="/rovers" element={<NasaRoversView />} />
-            <Route path="/test" element={<TestView />} />
+            <Route path="/rovers" element={<NasaRoversView />} />            
           </Routes>
         </main>
       </div>    

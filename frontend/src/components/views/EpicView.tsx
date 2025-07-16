@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useNasaApi, nasaApiFetch } from '../hooks/useNasaApi';
-import SpinnerOverlay from './SpinnerOverlay';
-import Carousel from './Carousel';
-import { getEasternDateString, addDays } from '../utils/dateutil';
-import { getMaxDaysBackEpic } from '../utils/env';
+import { useNasaApi, nasaApiFetch } from '../../hooks/useNasaApi';
+import SpinnerOverlay from '../SpinnerOverlay';
+import Carousel from '../Carousel';
+import { getEasternDateString, addDays } from '../../utils/dateutil';
+import { getMaxDaysBackEpic } from '../../utils/env';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 const MAX_DAYS_BACK = getMaxDaysBackEpic()
@@ -14,7 +14,7 @@ const RECENT_DAYS_TO_CHECK = 3; // Configurable number of days to check in paral
 
 // Loading, error, and empty state components
 const EpicLoading = () => (
-  <div className="text-gray-400 text-center my-8 w-full">Loading...</div>
+  <SpinnerOverlay/>
 );
 const EpicError = ({ message }: { message: string }) => (
   <div className="text-red-500 text-center my-8 w-full">Error: {message}</div>
@@ -110,6 +110,7 @@ const EpicView: React.FC = () => {
   const [mostRecentWithImages, setMostRecentWithImages] = useState<string | null>(null);
   const [noImagesForDate, setNoImagesForDate] = useState<string | null>(null);
   const [showZoomModal, setShowZoomModal] = useState(false);
+  const isUserNavigating = useRef(false); // NEW
 
   // Derive currentDate from urlDate or mostRecentWithImages
   const currentDate = urlDate || mostRecentWithImages;
@@ -165,36 +166,46 @@ const EpicView: React.FC = () => {
       const check = async () => {
         try {
           const json = await nasaApiFetch(`EPIC/api/natural/date/${urlDate}`);
+          console.log('[EpicView] useEffect check images for urlDate', { urlDate, json });
           if (!cancelled) {
             if (!Array.isArray(json) || json.length === 0) {
               setNoImagesForDate(urlDate);
-              // Find the most recent date with images
-              let checkDate = today;
-              let tries = 0;
-              let found = false;
-              while (tries < MAX_DAYS_BACK && !found) {
-                try {
-                  const json2 = await nasaApiFetch(`EPIC/api/natural/date/${checkDate}`);
-                  if (Array.isArray(json2) && json2.length > 0) {
-                    setMostRecentWithImages(checkDate);
-                    setSearchParams({ date: checkDate }, { replace: true }); // Use replace for auto-search
-                    found = true;
-                    break;
+              // Only auto-redirect if this is the first load (not user navigation)
+              if (!isUserNavigating.current && !mostRecentWithImages) {
+                let checkDate = today;
+                let tries = 0;
+                let found = false;
+                while (tries < MAX_DAYS_BACK && !found) {
+                  try {
+                    const json2 = await nasaApiFetch(`EPIC/api/natural/date/${checkDate}`);
+                    console.log('[EpicView] Searching for most recent with images', { checkDate, json2 });
+                    if (Array.isArray(json2) && json2.length > 0) {
+                      setMostRecentWithImages(checkDate);
+                      setSearchParams({ date: checkDate }, { replace: true });
+                      found = true;
+                      break;
+                    }
+                  } catch (err) {
+                    console.log('[EpicView] Error searching for most recent with images', { checkDate, err });
                   }
-                } catch {}
-                checkDate = addDays(checkDate, -1);
-                tries++;
+                  checkDate = addDays(checkDate, -1);
+                  tries++;
+                }
               }
             } else {
               setNoImagesForDate(null);
             }
           }
-        } catch {}
+        } catch (err) {
+          console.log('[EpicView] Error fetching images for urlDate', { urlDate, err });
+        } finally {
+          isUserNavigating.current = false; // Reset after check
+        }
       };
       check();
       return () => { cancelled = true; };
     }
-  }, [urlDate, today, setSearchParams]);
+  }, [urlDate, today, setSearchParams, mostRecentWithImages]);
 
   // Only fetch images if we have a valid currentDate and not searching
   const { data, loading, error } = useNasaApi(currentDate ? `${EPIC_API_PATH}${currentDate}` : '', {});
@@ -219,7 +230,7 @@ const EpicView: React.FC = () => {
   // Early return: loading
   if (searchingForRecent || (loading && !data)) {
     return (
-      <div className="p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
+      <div className="relative p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
         <EpicLoading />
       </div>
     );
@@ -237,12 +248,60 @@ const EpicView: React.FC = () => {
   // Early return: no images
   if (!data || !Array.isArray(data) || data.length === 0) {
     return (
-      <div className="p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
-        <EpicNoImages
-          mostRecentWithImages={noImagesForDate && mostRecentWithImages ? mostRecentWithImages : null}
-          setSearchParams={setSearchParams}
-          setNoImagesForDate={setNoImagesForDate}
-        />
+      <div className="p-4 h-[calc(100vh-4rem)] flex min-h-0 min-w-0 portrait:flex-col portrait:items-stretch landscape:items-start">
+        {/* Image Section: show No Images message */}
+        <div
+          className="portrait:w-full portrait:mb-4 portrait:max-h-[60vh] portrait:min-h-[60vh] portrait:flex-shrink-0           landscape:flex-shrink-0 landscape:max-w-[70vw] landscape:h-full landscape:mr-4  landscape:aspect-[4/3] "
+        >
+          <div className="w-full h-full flex items-center justify-center flex-shrink-0">
+            <EpicNoImages
+              mostRecentWithImages={noImagesForDate && mostRecentWithImages ? mostRecentWithImages : null}
+              setSearchParams={setSearchParams}
+              setNoImagesForDate={setNoImagesForDate}
+            />
+          </div>
+        </div>
+        {/* Metadata Section: always show navigation and metadata, but with no image info */}
+        <div
+          className="rounded-lg shadow-md bg-gray-900/80 p-0  portrait:w-full portrait:min-h-[25vh] portrait:max-h-[50vh] portrait:flex-grow landscape:flex-grow landscape:min-w-[35vh] landscape:max-h-[75vh] landscape:text-sm  landscape:md:text-base flex flex-col min-h-0 min-w-0 text-sm smphone:text-base md:text-lg sm:p-0 md:p-2"
+          style={{ verticalAlign: 'top', minWidth: 0, minHeight: 0 }}
+        >
+          {/* Navigation Buttons and Title Row */}
+          <div className="flex flex-row items-center justify-center w-full min-w-0 mb-2 gap-2">
+            <button
+              onClick={() => {
+                const newDate = clampDate(addDays(currentDate || today, -1));
+                console.log('[EpicView] Prev button clicked:', { currentDate, newDate, oldestAllowed, today });
+                isUserNavigating.current = true;
+                setSearchParams({ date: newDate });
+              }}
+              disabled={currentDate === null || currentDate === oldestAllowed}
+              className="px-2 py-2 bg-gray-700/60 rounded-full disabled:opacity-40 flex items-center justify-center hover:bg-gray-600 transition"
+              aria-label="Previous Day"
+            >
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <span className="font-bold text-blue-200 text-center mx-1 whitespace-normal text-base min-w-0 select-all" style={{lineHeight: '1.2'}}>{currentDate || 'Loading...'}</span>
+            <button
+              onClick={() => {
+                const newDate = clampDate(addDays(currentDate || today, 1));
+                console.log('[EpicView] Next button clicked:', { currentDate, newDate, oldestAllowed, today });
+                isUserNavigating.current = true;
+                setSearchParams({ date: newDate });
+              }}
+              disabled={currentDate === null || currentDate === today}
+              className="px-2 py-2 bg-gray-700/60 rounded-full disabled:opacity-40 flex items-center justify-center hover:bg-gray-600 transition"
+              aria-label="Next Day"
+            >
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+          <div className="text-gray-400 flex-1 flex items-center justify-center">No image selected.</div>
+        </div>
       </div>
     );
   }
@@ -299,7 +358,9 @@ const EpicView: React.FC = () => {
         <div className="flex flex-row items-center justify-center w-full min-w-0 mb-2 gap-2">
           <button
             onClick={() => {
-              const newDate = addDays(currentDate || today, -1);
+              const newDate = clampDate(addDays(currentDate || today, -1));
+              console.log('[EpicView] Prev button clicked:', { currentDate, newDate, oldestAllowed, today });
+              isUserNavigating.current = true; // NEW
               setSearchParams({ date: newDate });
             }}
             disabled={currentDate === null || currentDate === oldestAllowed}
@@ -313,7 +374,9 @@ const EpicView: React.FC = () => {
           <span className="font-bold text-blue-200 text-center mx-1 whitespace-normal text-base min-w-0 select-all" style={{lineHeight: '1.2'}}>{currentDate || 'Loading...'}</span>
           <button
             onClick={() => {
-              const newDate = addDays(currentDate || today, 1);
+              const newDate = clampDate(addDays(currentDate || today, 1));
+              console.log('[EpicView] Next button clicked:', { currentDate, newDate, oldestAllowed, today });
+              isUserNavigating.current = true; // NEW
               setSearchParams({ date: newDate });
             }}
             disabled={currentDate === null || currentDate === today}

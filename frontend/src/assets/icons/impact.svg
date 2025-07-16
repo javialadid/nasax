@@ -1,0 +1,8 @@
+<svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-label="CME Impact" xmlns="http://www.w3.org/2000/svg">
+  <title>CME Impact</title>
+  <circle cx="8" cy="12" r="5" fill="#fbbf24" stroke="#f59e42" stroke-width="1.5" />
+  <path d="M8 7 C18 2, 22 16, 8 17" stroke="#38bdf8" stroke-width="2.5" fill="none" />
+  <circle cx="19" cy="15" r="2.2" fill="#38bdf8" stroke="#0ea5e9" stroke-width="1.2" />
+  <path d="M15 13 L18 15" stroke="#f472b6" stroke-width="1.2" />
+  <path d="M15 17 L18 15" stroke="#f472b6" stroke-width="1.2" />
+</svg> 
