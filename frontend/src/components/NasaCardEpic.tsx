@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const DEFAULT_IMAGE = '/epic_card_default.png';
+const DEFAULT_IMAGE = '/epic_card_hd.png';
 const DEFAULT_TITLE = 'EPIC';
 const DEFAULT_SUBTITLE = 'Earth Polychromatic Imaging Camera';
 const DEFAULT_SECONDARY = 'Watch the earth rotating';
@@ -18,7 +18,7 @@ const NasaCardEpic: React.FC = () => {
         <img
           src={DEFAULT_IMAGE}
           alt={DEFAULT_TITLE}
-          className="absolute inset-0 w-full h-full p-2 object-cover"
+          className="absolute inset-0 w-full h-full p-2 object-contain"
           loading="eager"
         />
         {/* Always show the default title at the top */}

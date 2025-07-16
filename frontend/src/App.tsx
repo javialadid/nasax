@@ -11,6 +11,7 @@ import NasaRoversCard from './components/NasaRoversCard';
 import NasaRoversView from './components/views/NasaRoversView';
 import ScrollableView from './components/ScrollableView';
 import TestView from './components/views/TestView';
+import { NasaCardDataProvider } from './NasaCardDataContext';
 const logo = '/logo_nasax_alpha.png';
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
     return '';
   }
   return (    
-    <>
+    <NasaCardDataProvider>
       <DeepSpaceBackground />
       <div className="w-full text-[var(--color-text)] z-10 overflow-hidden flex flex-col h-screen min-h-0">
         {/* Top Pane */}
@@ -57,7 +58,8 @@ function App() {
         </nav>
         {/* Main Content */}
         <main
-          className="flex-1 flex flex-col items-center justify-between w-full overflow-hidden"
+          className="flex-1 flex flex-col items-center justify-between w-full overflow-hidden
+          h-[calc(100vh-5rem)]"
         >
           <Routes>
             <Route path="/" element={
@@ -80,7 +82,7 @@ function App() {
           </Routes>
         </main>
       </div>    
-    </>
+    </NasaCardDataProvider>
   );
 }
 

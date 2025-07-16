@@ -1,20 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getApiBaseUrl } from '../utils/env';
+import { useNasaCardData } from '../NasaCardDataContext';
 
-const DEFAULT_IMAGE = '/rovers_card.png'; // Place a default image in public/
+const DEFAULT_IMAGE = '/rovers_card.png'; 
 const DEFAULT_TITLE = 'Mars Rovers';
-const ROVERS = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
+const ROVERS = ['perseverance', 'curiosity']; // Only use these two, bad pictures often in the other 2
 
 const CARD_IMG_WIDTH = 400;
 const CARD_IMG_HEIGHT = 300;
 
 const NasaRoversCard: React.FC = () => {
-  const [images, setImages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [randomIdx, setRandomIdx] = useState<number | null>(null);
+  const { roversData, setRoversData } = useNasaCardData();
+  const [loading, setLoading] = useState(roversData.length === 0);
 
   useEffect(() => {
+    if (roversData.length > 0) {
+      setLoading(false);
+      return;
+    }
     let isMounted = true;
     setLoading(true);
     Promise.all(
@@ -30,17 +34,32 @@ const NasaRoversCard: React.FC = () => {
       })
     ).then(results => {
       if (!isMounted) return;
-      const valid = results.filter(r => r.photo);
-      setImages(valid);
-      setRandomIdx(valid.length > 0 ? Math.floor(Math.random() * valid.length) : null);
+      const valid = results.filter(r => r.photo && r.photo.img_src);
+      setRoversData(valid);
       setLoading(false);
     });
     return () => { isMounted = false; };
-  }, []);
+  }, [roversData, setRoversData]);
 
-  const show = randomIdx !== null && images[randomIdx];
-  const image = show ? images[randomIdx].photo.img_src : DEFAULT_IMAGE;
-  const roverName = show ? images[randomIdx].rover : '';
+  // Memoize randomIdx so it is stable for the same data
+  const randomIdx = useMemo(() => {
+    if (roversData.length > 0) {
+      return Math.floor(Math.random() * roversData.length);
+    }
+    return null;
+  }, [roversData]);
+
+  const show = randomIdx !== null && roversData[randomIdx];
+  const image = show ? roversData[randomIdx].photo.img_src : DEFAULT_IMAGE;
+  const roverName = show ? roversData[randomIdx].rover : '';
+
+  // Remove broken images from the list
+  const handleImgError = () => {
+    if (show) {
+      const filtered = roversData.filter((_, idx) => idx !== randomIdx);
+      setRoversData(filtered);
+    }
+  };
 
   return (
     <Link to="/rovers" style={{ textDecoration: 'none' }}>
@@ -58,7 +77,7 @@ const NasaRoversCard: React.FC = () => {
           height={CARD_IMG_HEIGHT}
           className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
-          onError={e => { e.currentTarget.src = DEFAULT_IMAGE; }}
+          onError={handleImgError}
         />
         {/* Always show the default title at the top */}
         <div className="absolute top-0 left-0 w-full bg-black/60 text-white text-lg font-semibold px-3 py-2 text-center truncate z-10">
@@ -67,7 +86,7 @@ const NasaRoversCard: React.FC = () => {
         {/* When loaded, show rover name at the bottom */}
         {show && !loading && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">
-            <div className="font-semibold text-base truncate">{images[randomIdx].rover.charAt(0).toUpperCase() + images[randomIdx].rover.slice(1)}</div>
+            <div className="font-semibold text-base truncate">{roversData[randomIdx].rover.charAt(0).toUpperCase() + roversData[randomIdx].rover.slice(1)}</div>
             <div className="text-xs text-gray-300 mt-1">Latest Mars rover image</div>
           </div>
         )}

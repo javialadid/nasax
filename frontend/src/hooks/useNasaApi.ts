@@ -2,14 +2,20 @@ import { useEffect, useState, useRef } from 'react';
 import { getApiBaseUrl } from '../utils/env';
 import { getEasternDateString } from '../utils/dateutil';
 
-
-export function useNasaApi(endpoint: string, params: Record<string, string> = {}) {
+export function useNasaApi(endpoint: string, params: Record<string, string> = {}, options?: { enabled?: boolean }) {
+  const enabled = options?.enabled !== undefined ? options.enabled : true;
   const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<Error | null>(null);
   const requestIdRef = useRef(0);
 
-  useEffect(() => {    
+  useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      setError(null);
+      setData(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     const baseUrl = getApiBaseUrl();
@@ -43,7 +49,7 @@ export function useNasaApi(endpoint: string, params: Record<string, string> = {}
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [endpoint, JSON.stringify(params)]);
+  }, [endpoint, JSON.stringify(params), enabled]);
 
   return { data, loading, error };
 }

@@ -4,6 +4,7 @@ import { getApiBaseUrl } from '../utils/env';
 import { getEasternDateString, addDays } from '../utils/dateutil';
 import { firstSentence } from '../utils/stringutil';
 import { getMaxDaysBackEpic } from '../utils/env';
+import { useNasaCardData } from '../NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/default-apod.png'; // Place a default image in public/
 const DEFAULT_TITLE = 'Astronomy Picture of the Day';
@@ -14,12 +15,16 @@ const CARD_IMG_HEIGHT = 300;
 const MAX_DAYS_BACK = getMaxDaysBackEpic();
 
 const NasaCardApod: React.FC = () => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [autoBackCount, setAutoBackCount] = useState(0);
+  const { apodData, setApodData } = useNasaCardData();
+  const [loading, setLoading] = useState(!apodData);
   const [noRecentData, setNoRecentData] = useState(false);
 
   useEffect(() => {
+    if (apodData) {
+      setLoading(false);
+      setNoRecentData(false);
+      return;
+    }
     const fetchData = async (date: string, backCount: number) => {
       try {
         const res = await fetch(`${getApiBaseUrl()}/planetary/apod?date=${date}`);
@@ -33,7 +38,7 @@ const NasaCardApod: React.FC = () => {
             setLoading(false);
           }
         } else {
-          setData(json);
+          setApodData(json);
           setNoRecentData(false);
           setLoading(false);
         }
@@ -49,14 +54,13 @@ const NasaCardApod: React.FC = () => {
     };
     setLoading(true);
     setNoRecentData(false);
-    setData(null);
     fetchData(getEasternDateString(), 0);
-  }, []);
+  }, [apodData, setApodData]);
 
   // Prefer the smallest available image for the card
-  const image = data && data.url ? data.url : DEFAULT_IMAGE;
-  const apiTitle = data && data.title ? data.title : '';
-  const apiExplanation = data && data.explanation ? firstSentence(data.explanation) : '';
+  const image = apodData && apodData.url ? apodData.url : DEFAULT_IMAGE;
+  const apiTitle = apodData && apodData.title ? apodData.title : '';
+  const apiExplanation = apodData && apodData.explanation ? firstSentence(apodData.explanation) : '';
 
   return (
     <Link to="/apod" style={{ textDecoration: 'none' }}>
@@ -80,7 +84,7 @@ const NasaCardApod: React.FC = () => {
           {DEFAULT_TITLE}
         </div>
         {/* When data is loaded, show API title and first sentence at the bottom */}
-        {data && !noRecentData && (
+        {apodData && !noRecentData && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">
             <div className="font-semibold text-base truncate">{apiTitle}</div>
             <div className="text-xs text-gray-300 mt-1">{apiExplanation}</div>

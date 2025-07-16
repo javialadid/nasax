@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useNasaApi } from '../hooks/useNasaApi';
 import { firstSentence, getChunkBetween } from '../utils/stringutil';
 import { getEasternDateString, addDays } from '../utils/dateutil';
+import { useNasaCardData } from '../NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/donki_card.png';
 const DEFAULT_TITLE = 'DONKI Report';
@@ -19,22 +20,39 @@ const API_PARAMS = {
 };
 
 const NasaCardDonki: React.FC = () => {
-  const { data, loading, error } = useNasaApi(API_ENDPOINT, API_PARAMS);
-  const [notification, setNotification] = useState<any>(null);
+  const { donkiData, setDonkiData } = useNasaCardData();
+  // Only fetch if donkiData is not present
+  const shouldFetch = !donkiData;
+  const { data, loading: apiLoading, error } = useNasaApi(API_ENDPOINT, API_PARAMS, { enabled: shouldFetch });
+  const [loading, setLoading] = useState(shouldFetch);
+  const [notification, setNotification] = useState<any>(donkiData);
   const [noRecentData, setNoRecentData] = useState(false);
 
   useEffect(() => {
-    if (!loading && Array.isArray(data)) {
+    if (donkiData) {
+      setNotification(donkiData);
+      setLoading(false);
+      setNoRecentData(false);
+      return;
+    }
+    if (!apiLoading && Array.isArray(data)) {
       // Find the first notification with a messageBody
       const found = data.find((notif: any) => notif && notif.messageBody);
       setNotification(found || null);
+      setDonkiData(found || null);
       setNoRecentData(!found);
+      setLoading(false);
     }
-    if (!loading && !Array.isArray(data)) {
+    if (!apiLoading && !Array.isArray(data)) {
       setNotification(null);
+      setDonkiData(null);
       setNoRecentData(true);
+      setLoading(false);
     }
-  }, [data, loading]);
+    if (apiLoading && !donkiData) {
+      setLoading(true);
+    }
+  }, [data, apiLoading, donkiData, setDonkiData]);
 
   const issueDate = notification && notification.messageIssueTime ? notification.messageIssueTime.split('T')[0] : '';
   const cardTitle = `${DEFAULT_TITLE}${issueDate ? ` (${issueDate})` : ''}`;
@@ -70,8 +88,7 @@ const NasaCardDonki: React.FC = () => {
         {/* When data is loaded, show notification type and summary at the bottom */}
         {notification && !noRecentData && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">
-            
-			<div className="text-xs text-gray-300 mt-1">{cardSubtitle}</div>
+            <div className="text-xs text-gray-300 mt-1">{cardSubtitle}</div>
           </div>
         )}
         {noRecentData && !loading && (
