@@ -156,6 +156,7 @@ const ApodView = () => {
               alt={data.title}
               className="picture-shadow object-contain rounded-lg mx-auto group-hover:opacity-90 transition-opacity self-start max-h-full max-w-full"
               style={{ minHeight: 0, minWidth: 0, display: 'block' }}
+              loading="eager"
               onLoad={() => {                
                 setImageLoading(false);
               }}

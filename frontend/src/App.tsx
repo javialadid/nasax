@@ -21,7 +21,7 @@ function App() {
   function getNavLabel(pathname: string) {
     if (pathname === '/apod') return 'Astronomy Picture of the Day';
     if (pathname === '/epic') return 'Earth Polychromatic Imaging Camera (EPIC)';
-    if (pathname === '/rovers') return 'Mars Rovers: Latest Images';
+    if (pathname === '/rovers') return 'Mars Rovers: Latest Images';    
     if (pathname === '/') return '';
     // Add more routes as needed
     return '';
@@ -79,7 +79,7 @@ function App() {
             <Route path="/apod" element={<ApodView />} />
             <Route path="/epic" element={<EpicView />} />
             <Route path="/donki" element={<DonkiNotificationsView />} />
-            <Route path="/rovers" element={<NasaRoversView />} />            
+            <Route path="/rovers" element={<NasaRoversView />} />                        
           </Routes>
         </main>
       </div>    
