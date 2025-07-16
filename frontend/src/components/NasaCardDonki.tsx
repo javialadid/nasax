@@ -36,8 +36,8 @@ const NasaCardDonki: React.FC = () => {
       return;
     }
     if (!apiLoading && Array.isArray(data)) {
-      // Find the first notification with a messageBody
-      const found = data.find((notif: any) => notif && notif.messageBody);
+      // Find the first notification with messageType 'report' (case-insensitive)
+      const found = data.find((notif: any) => notif && typeof notif.messageType === 'string' && notif.messageType.toLowerCase() === 'report');
       setNotification(found || null);
       setDonkiData(found || null);
       setNoRecentData(!found);
@@ -56,13 +56,18 @@ const NasaCardDonki: React.FC = () => {
 
   const issueDate = notification && notification.messageIssueTime ? notification.messageIssueTime.split('T')[0] : '';
   const cardTitle = `${DEFAULT_TITLE}${issueDate ? ` (${issueDate})` : ''}`;
-  let summary = notification && notification.messageBody ? getChunkBetween(notification.messageBody, '## Summary:', '#') : '';
-  if (!summary && notification && notification.messageBody) {
-    // fallback: try to get everything after 'Summary:'
-    const idx = notification.messageBody.indexOf('## Summary:');
-    if (idx !== -1) summary = notification.messageBody.slice(idx + 8).split('\n')[0];
+  let cardSubtitle = '';
+  if (notification && notification.processedMessage && notification.processedMessage.ai_summary) {
+    cardSubtitle = firstSentence(notification.processedMessage.ai_summary.trim());
+  } else {
+    let summary = notification && notification.messageBody ? getChunkBetween(notification.messageBody, '## Summary:', '#') : '';
+    if (!summary && notification && notification.messageBody) {
+      // fallback: try to get everything after 'Summary:'
+      const idx = notification.messageBody.indexOf('## Summary:');
+      if (idx !== -1) summary = notification.messageBody.slice(idx + 8).split('\n')[0];
+    }
+    cardSubtitle = summary ? firstSentence(summary.trim()) : '';
   }
-  const cardSubtitle = summary ? firstSentence(summary.trim()) : '';
 
   return (
     <Link to="/donki" style={{ textDecoration: 'none' }}>
