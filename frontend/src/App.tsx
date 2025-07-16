@@ -2,14 +2,14 @@
 import DeepSpaceBackground from './components/DeepSpaceBackground';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 
-import ApodView from './components/views/ApodView';
-import EpicView from './components/views/EpicView';
-import DonkiNotificationsView from './components/views/DonkiView';
+import ApodView from '@/components/views/ApodView';
+import EpicView from '@/components/views/EpicView';
+import DonkiNotificationsView from '@/components/views/DonkiView';
 import NasaRoversView from './components/views/RoversView';
 
-import NasaCardApod from './components/NasaCardApod';
-import NasaCardDonki from './components/NasaCardDonki';
-import NasaCardEpic from './components/NasaCardEpic';
+import NasaCardApod from '@/components/NasaCardApod';
+import NasaCardDonki from '@/components/NasaCardDonki';
+import NasaCardEpic from '@/components/NasaCardEpic';
 import NasaRoversCard from './components/NasaRoversCard';
 
 import ScrollableView from './components/ScrollableView';

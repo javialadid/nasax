@@ -21,20 +21,29 @@ const NasaRoversCard: React.FC = () => {
     }
     let isMounted = true;
     setLoading(true);
+    function fetchWithBackoff(rover: string, delay = 1000, attempt = 0): Promise<{ rover: string; photo: any }> {
+      return new Promise(resolve => {
+        const doFetch = async () => {
+          try {
+            const res = await fetch(`${getApiBaseUrl()}/mars-photos/api/v1/rovers/${rover}/latest_photos`);
+            const json = await res.json();
+            const photo = json.latest_photos?.[0] || null;
+            resolve({ rover, photo });
+          } catch {
+            const nextDelay = Math.min(delay + 1000, 60000);
+            setTimeout(() => {
+              fetchWithBackoff(rover, nextDelay, attempt + 1).then(resolve);
+            }, delay);
+          }
+        };
+        doFetch();
+      });
+    }
     Promise.all(
-      ROVERS.map(async rover => {
-        try {
-          const res = await fetch(`${getApiBaseUrl()}/mars-photos/api/v1/rovers/${rover}/latest_photos`);
-          const json = await res.json();
-          const photo = json.latest_photos?.[0] || null;
-          return { rover, photo };
-        } catch {
-          return { rover, photo: null };
-        }
-      })
-    ).then(results => {
+      ROVERS.map(rover => fetchWithBackoff(rover))
+    ).then((results: { rover: string; photo: any }[]) => {
       if (!isMounted) return;
-      const valid = results.filter(r => r.photo && r.photo.img_src);
+      const valid = results.filter((r: { rover: string; photo: any }) => r.photo && r.photo.img_src);
       setRoversData(valid);
       setLoading(false);
     });

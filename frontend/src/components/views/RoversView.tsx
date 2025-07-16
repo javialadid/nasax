@@ -141,7 +141,7 @@ const NasaRoversView: React.FC = () => {
           className="flex-1 flex items-center justify-center min-h-0 h-full w-full bg-black rounded-lg"
         >
           {loading && <SpinnerOverlay />}
-          {error && <div className="text-red-400">Error: {error.message}</div>}
+          {error && <div className="text-red-400">Error Loading Data</div>}
           {!loading && !error && !filteredImages.length && (
             <div className="flex items-center justify-center text-gray-400">
               No images found for {rover}{selectedCamera ? ` (${cameraOptions.find(c => c.name === selectedCamera)?.full_name || selectedCamera})` : ''}.

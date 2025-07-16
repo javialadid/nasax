@@ -17,7 +17,7 @@ const EpicLoading = () => (
   <SpinnerOverlay/>
 );
 const EpicError = ({ message }: { message: string }) => (
-  <div className="text-red-500 text-center my-8 w-full">Error: {message}</div>
+  <div className="text-red-500 text-center my-8 w-full">Error Loading Data</div>
 );
 const EpicNoImages = ({ mostRecentWithImages, setSearchParams, setNoImagesForDate }: {
   mostRecentWithImages: string | null,

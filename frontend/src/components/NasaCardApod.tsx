@@ -25,14 +25,17 @@ const NasaCardApod: React.FC = () => {
       setNoRecentData(false);
       return;
     }
-    const fetchData = async (date: string, backCount: number) => {
+    const fetchData = async (date: string, backCount: number, delay: number = 1000) => {
       try {
         const res = await fetch(`${getApiBaseUrl()}/planetary/apod?date=${date}`);
         const json = await res.json();
         if (!json || !json.url) {
           if (backCount < MAX_DAYS_BACK) {
             const prevDate = addDays(date, -1);
-            await fetchData(prevDate, backCount + 1);
+            const nextDelay = Math.min(delay + 1000, 60000);
+            setTimeout(() => {
+              fetchData(prevDate, backCount + 1, nextDelay);
+            }, delay);
           } else {
             setNoRecentData(true);
             setLoading(false);
@@ -45,7 +48,10 @@ const NasaCardApod: React.FC = () => {
       } catch (e) {
         if (backCount < MAX_DAYS_BACK) {
           const prevDate = addDays(date, -1);
-          await fetchData(prevDate, backCount + 1);
+          const nextDelay = Math.min(delay + 1000, 60000);
+          setTimeout(() => {
+            fetchData(prevDate, backCount + 1, nextDelay);
+          }, delay);
         } else {
           setNoRecentData(true);
           setLoading(false);
@@ -54,7 +60,7 @@ const NasaCardApod: React.FC = () => {
     };
     setLoading(true);
     setNoRecentData(false);
-    fetchData(getEasternDateString(), 0);
+    fetchData(getEasternDateString(), 0); // no delay param needed, default is 1000ms
   }, [apodData, setApodData]);
 
   // Prefer the smallest available image for the card

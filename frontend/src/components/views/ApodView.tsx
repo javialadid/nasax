@@ -122,7 +122,7 @@ const ApodView = () => {
     return <SpinnerOverlay />;
   }
   if (error) {    
-    return <div className="text-red-500 text-center my-8">Error: {error.message}</div>;
+    return <div className="text-red-500 text-center my-8">Error Loading Data</div>;
   }
   if (retryCount >= MAX_DAYS_BACK) {
     log('Max retries reached', { retryCount, MAX_DAYS_BACK });
