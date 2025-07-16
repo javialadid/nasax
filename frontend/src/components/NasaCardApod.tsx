@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getApiBaseUrl } from '../utils/env';
-import { getEasternDateString, addDays } from '../utils/dateutil';
-import { firstSentence } from '../utils/stringutil';
-import { getMaxDaysBackEpic } from '../utils/env';
-import { useNasaCardData } from '../NasaCardDataContext';
+import { getApiBaseUrl } from '@/utils/env';
+import { getEasternDateString, addDays } from '@/utils/dateutil';
+import { firstSentence } from '@/utils/stringutil';
+import { getMaxDaysBackEpic } from '@/utils/env';
+import { useNasaCardData } from '@/NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/default-apod.png'; // Place a default image in public/
 const DEFAULT_TITLE = 'Astronomy Picture of the Day';

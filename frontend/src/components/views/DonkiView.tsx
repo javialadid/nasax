@@ -1,7 +1,7 @@
 import React from 'react';
-import { useNasaApi } from '../../hooks/useNasaApi';
-import { getEasternDateString, addDays } from '../../utils/dateutil';
-import DonkiAiReport from '../DonkiAiReport';
+import { useNasaApi } from '@/hooks/useNasaApi';
+import { getEasternDateString, addDays } from '@/utils/dateutil';
+import DonkiAiReport from '@components/DonkiAiReport';
 
 const API_ENDPOINT = 'DONKI/notifications';
 const today = getEasternDateString();

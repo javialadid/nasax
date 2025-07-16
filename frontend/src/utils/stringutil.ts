@@ -24,10 +24,10 @@ export const breakParagraphs = (text: string, minLength: number): string[] => {
 
 export const firstSentence = ( text: string ) => {
 	if (!text) return '';
-	const firstPeriod = text.indexOf('.');
-	if (firstPeriod === -1) return text;
-	return text.slice(0, firstPeriod + 1) ;
-  }
+	const match = text.match(/([\s\S]*?[.!?\n])(?=\s|$)/);
+	if (match) return match[0].trim();
+	return text;
+}
 
 export const getChunkBetween = (fullString: string, startString: string, endString: string): string | null => {
   if (!fullString || !startString || !endString) {

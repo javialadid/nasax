@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useNasaApi } from '../hooks/useNasaApi';
-import { firstSentence, getChunkBetween } from '../utils/stringutil';
-import { getEasternDateString, addDays } from '../utils/dateutil';
-import { useNasaCardData } from '../NasaCardDataContext';
+import { useNasaApi } from '@/hooks/useNasaApi';
+import { firstSentence, getChunkBetween } from '@/utils/stringutil';
+import { getEasternDateString, addDays } from '@/utils/dateutil';
+import { useNasaCardData } from '@/NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/donki_card.png';
 const DEFAULT_TITLE = 'DONKI Report';

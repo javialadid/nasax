@@ -1,5 +1,5 @@
 import React from 'react';
-import { firstSentence } from '../utils/stringutil';
+import { firstSentence } from '@/utils/stringutil';
 
 const Card: React.FC<{ data: any; onClick: () => void }> = ({ data, onClick }) => (
   <div

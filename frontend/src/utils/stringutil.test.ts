@@ -1,4 +1,4 @@
-import { breakParagraphs } from './stringutil';
+import { breakParagraphs } from '@/utils/stringutil';
 
 describe('breakParagraphs', () => {
   it('splits at the first period after minLength, including the period', () => {

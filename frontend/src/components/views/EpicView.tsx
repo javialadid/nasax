@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useNasaApi, nasaApiFetch } from '../../hooks/useNasaApi';
-import SpinnerOverlay from '../SpinnerOverlay';
-import Carousel from '../Carousel';
-import { getEasternDateString, addDays } from '../../utils/dateutil';
-import { getMaxDaysBackEpic } from '../../utils/env';
+import { useNasaApi, nasaApiFetch } from '@/hooks/useNasaApi';
+import SpinnerOverlay from '@components/SpinnerOverlay';
+import Carousel from '@components/Carousel';
+import { getEasternDateString, addDays } from '@/utils/dateutil';
+import { getMaxDaysBackEpic } from '@/utils/env';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 const MAX_DAYS_BACK = getMaxDaysBackEpic()

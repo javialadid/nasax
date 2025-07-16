@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getApiBaseUrl } from '../utils/env';
-import { useNasaCardData } from '../NasaCardDataContext';
+import { getApiBaseUrl } from '@/utils/env';
+import { useNasaCardData } from '@/NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/rovers_card.png'; 
 const DEFAULT_TITLE = 'Mars Rovers';

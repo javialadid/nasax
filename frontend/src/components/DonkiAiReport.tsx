@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import flareIcon from '../assets/icons/flare.svg';
-import cmeIcon from '../assets/icons/cme.svg';
-import outlookIcon from '../assets/icons/outlook.svg';
-import impactIcon from '../assets/icons/impact.svg';
-import noteIcon from '../assets/icons/note.svg';
-import aiIcon from '../assets/icons/ai.svg';
-import summaryIcon from '../assets/icons/summary.svg';
+import flareIcon from '@/assets/icons/flare.svg';
+import cmeIcon from '@/assets/icons/cme.svg';
+import outlookIcon from '@/assets/icons/outlook.svg';
+import impactIcon from '@/assets/icons/impact.svg';
+import noteIcon from '@/assets/icons/note.svg';
+import aiIcon from '@/assets/icons/ai.svg';
+import summaryIcon from '@/assets/icons/summary.svg';
 
 // Types for the LLM-extracted Donki report
 export interface DonkiAiReportData {

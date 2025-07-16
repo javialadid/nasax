@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNasaApi } from '../../hooks/useNasaApi';
-import Explanation from '../Explanation';
-import { getEasternDateString, formatDateString, clampDateToRange, daysBetween, addDays } from '../../utils/dateutil';
+import { useNasaApi } from '@/hooks/useNasaApi';
+import Explanation from '@components/Explanation';
+import { getEasternDateString, formatDateString, clampDateToRange, daysBetween, addDays } from '@/utils/dateutil';
 import { useSearchParams } from 'react-router-dom';
-import SpinnerOverlay from '../SpinnerOverlay';
+import SpinnerOverlay from '@components/SpinnerOverlay';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
-import { getMaxDaysBackEpic } from '../../utils/env';
+import { getMaxDaysBackEpic } from '@/utils/env';
 
 // Logging utility for debugging
 const log = (message: string, data: any) => {

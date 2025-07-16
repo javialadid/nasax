@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useNasaApi } from '../../hooks/useNasaApi';
-import SpinnerOverlay from '../SpinnerOverlay';
-import Carousel from '../Carousel';
+import { useNasaApi } from '@/hooks/useNasaApi';
+import SpinnerOverlay from '@components/SpinnerOverlay';
+import Carousel from '@components/Carousel';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 const ROVERS = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
