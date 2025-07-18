@@ -10,8 +10,7 @@ function getLLMConfig() {
   };
 }
 
-function extractJsonFromText(text: string): any {
-  // First, try to parse the whole text as JSON
+function extractJsonFromText(text: string): any {  
   try {
     return JSON.parse(text);
   } catch {}

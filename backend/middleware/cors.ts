@@ -4,6 +4,10 @@ const allowedOrigins = process.env.NODE_ENV === "production"
 	? process.env.ORIGINS?.split(',') || ['*']
 	: ['*']
 
+if (process.env.NODE_ENV === 'production' && (!process.env.ORIGINS || process.env.ORIGINS === '*')) {
+  console.warn('[CORS] WARNING: ORIGINS environment variable is not set or is wildcard in production. This may expose your API to all origins.');
+}
+
 console.log('[CORS] Allowed origins:', allowedOrigins);
 const corsOptions: CorsOptions = {
 	origin: (origin, callback) => {

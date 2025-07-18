@@ -19,7 +19,8 @@ export async function processDonkiNotificationsResponse(responseText: string): P
   }
   try {
     const json = JSON.parse(responseText);
-    console.log('[DONKI LLM] Parsed JSON type:', Array.isArray(json) ? 'array' : typeof json, 'length:', Array.isArray(json) ? json.length : undefined);
+    console.log('[DONKI LLM] Parsed JSON type:', Array.isArray(json) ? 'array' : typeof json, 
+      'length:', Array.isArray(json) ? json.length : undefined);
     if (Array.isArray(json)) {
       await Promise.all(json.map(async (item, idx) => {
         
@@ -41,10 +42,9 @@ export async function processDonkiNotificationsResponse(responseText: string): P
               // Do not add processedMessage if LLM fails
             }
           }
-        } else if (item.messageType === 'Report') {
-          // Ensure processedMessage is always present only if messageBody exists
-          console.warn(`[DONKI LLM] [${idx}] No message to process. messageType:`, item.messageType, 'messageBody:', item.messageBody);
-          // Do not add processedMessage if no messageBody
+        } else if (item.messageType === 'Report') {          
+          console.warn(`[DONKI LLM] [${idx}] No message to process. messageType:`, item.messageType, 
+            'messageBody:', item.messageBody);          
         }
       }));
       return json;
