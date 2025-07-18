@@ -5,6 +5,21 @@ import { processDonkiNotificationsResponse } from '../services/donkiNotification
 
 const NASA_API_URL = 'https://api.nasa.gov'
 
+const ALLOWED_NASA_PATHS = [
+  /^\/planetary\//,
+  /^\/donki\/notifications$/,
+  /^\/mars-photos\/api\/v1\//,
+  
+];
+
+function sanitizeNasaUrl(path: string): string | null {
+  // Only allow whitelisted NASA API paths
+  for (const regex of ALLOWED_NASA_PATHS) {
+    if (regex.test(path)) return path;
+  }
+  return null;
+}
+
 const router = Router();
 
 function sanitizeNasaDomain(domain: string | undefined): string {
@@ -25,6 +40,14 @@ function buildNasaUrl(req: Request): string {
   const urlObj = new URL(originalUrl, `https://${nasaDomain}`);
   urlObj.searchParams.set('api_key', process.env.NASA_API_KEY || '');
   urlObj.searchParams.delete('domain'); // Remove domain param from proxied request
+  // Only restrict paths if RESTRICT_PATHS env is true
+  if (process.env.RESTRICT_PATHS === 'true') {
+    const sanitizedPath = sanitizeNasaUrl(urlObj.pathname);
+    if (!sanitizedPath) {
+      throw new Error('Requested NASA API path is not allowed.');
+    }
+    urlObj.pathname = sanitizedPath;
+  }
   return urlObj.toString();
 }
 
@@ -46,8 +69,13 @@ async function proxyToNasa(req: Request, res: Response, nasaUrl: string, respons
 
 router.use(async (req: Request, res: Response) => {
   const skipCache = process.env.SKIP_CACHE === 'true';
-  const nasaUrl = buildNasaUrl(req);
-
+  let nasaUrl: string;
+  try {
+    nasaUrl = buildNasaUrl(req);
+  } catch (err: any) {
+    res.status(403).json({ error: err.message || 'Forbidden NASA API path.' });
+    return;
+  }
   if (req.method === 'GET') {
     let cacheKey: string | undefined = undefined;
     if (!skipCache) {
@@ -56,9 +84,7 @@ router.use(async (req: Request, res: Response) => {
       if (cached) {
         console.debug('Cached response');
         res.setHeader('X-Cache', 'HIT');
-		// Most NASA APIs return JSON
-		// This could use a way to store content-type in cache if required
-        res.setHeader('Content-Type', 'application/json'); 
+        res.setHeader('Content-Type', 'application/json');
         res.send(cached);
         return;
       }
@@ -67,15 +93,7 @@ router.use(async (req: Request, res: Response) => {
     try {
       const axiosResponse = await proxyToNasa(req, res, nasaUrl, 'arraybuffer');
       let responseData = Buffer.from(axiosResponse.data);
-      let contentType = axiosResponse.headers['content-type'] || '';
-      // Intercept DONKI/notifications endpoint
-      if (/donki\/notifications/i.test(nasaUrl)) {
-        // Convert Buffer to string for processing
-        const responseText = responseData.toString('utf-8');
-        const processed = await processDonkiNotificationsResponse(responseText);
-        responseData = Buffer.from(JSON.stringify(processed), 'utf-8');
-        contentType = 'application/json';
-      }
+      let contentType = axiosResponse.headers['content-type'] || '';      
       if (!skipCache && cacheKey) {
         res.setHeader('X-Cache', 'MISS');
         cache.set(cacheKey, responseData);

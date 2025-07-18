@@ -4,7 +4,9 @@ import cache, { cacheKeyFromUrl } from '../services/cache';
 // Simple config: array of { regex, ttl } rules (ttl in seconds)
 const cacheRules: { regex: RegExp; ttl: number }[] = [
   { regex: /donki\/notifications/i, ttl: 7 * 24 * 60 * 60 }, // 1 week for DONKI notifications
-  // Add more rules here as needed
+  { regex: /nasa\/apod/i, ttl: 24 * 60 * 60 }, // 24 hours for APOD
+  { regex: /nasa\/rovers/i, ttl: 12 * 60 * 60 }, // 12 hours for Rovers feed
+  { regex: /nasa\/epic/i, ttl: 6 * 60 * 60 }, // 6 hours for EPIC
 ];
 const defaultTTL = 60 * 60; // 1 hour
 
