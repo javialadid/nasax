@@ -10,10 +10,14 @@ import NasaCardApod from '@/components/NasaCardApod';
 import NasaCardDonki from '@/components/NasaCardDonki';
 import NasaCardEpic from '@/components/NasaCardEpic';
 import NasaRoversCard from '@/components/NasaRoversCard';
+import NasaCardInsight from '@/components/NasaCardInsight';
 
 import ScrollableView from '@/components/ScrollableView';
 import { NasaCardDataProvider } from '@/NasaCardDataContext';
+import React, { Suspense } from 'react';
 const logo = '/logo_nasax_alpha.png';
+
+const LazyInsightView = React.lazy(() => import('@/components/views/InsightView'));
 
 function App() {
   const location = useLocation();
@@ -69,7 +73,8 @@ function App() {
                   <NasaCardApod/>
                   <NasaCardEpic />
                   <NasaCardDonki />
-                  <NasaRoversCard />
+                  <NasaRoversCard />                  
+                  <NasaCardInsight />                  
                   {/* Add empty divs for 2x2 grid layout, or more cards in the future */}
                   <div className="hidden sm:block" />
                 </div>
@@ -79,6 +84,12 @@ function App() {
             <Route path="/epic" element={<EpicView />} />
             <Route path="/donki" element={<DonkiNotificationsView />} />
             <Route path="/rovers" element={<NasaRoversView />} />                        
+            <Route path="/insight" element={
+              <Suspense fallback={<div className="text-center text-lg text-gray-400">
+                Loading InSight Mars Weather...</div>}>
+                <LazyInsightView />
+              </Suspense>
+            } />
           </Routes>
         </main>
       </div>    

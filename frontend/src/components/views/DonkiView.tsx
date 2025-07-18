@@ -2,6 +2,7 @@ import React from 'react';
 import { useNasaApi } from '@/hooks/useNasaApi';
 import { getEasternDateString, addDays } from '@/utils/dateutil';
 import DonkiAiReport from '@components/DonkiAiReport';
+import SpinnerOverlay from '@components/SpinnerOverlay';
 
 const API_ENDPOINT = 'DONKI/notifications';
 const today = getEasternDateString();
@@ -21,7 +22,7 @@ const DonkiNotificationsView: React.FC = () => {
   return (
     <div className="flex flex-col w-full max-w-3xl mx-auto min-h-0 h-full flex-1 py-2 px-2 overflow-auto">
       
-      {loading && <div className="text-center text-lg">Loading...</div>}
+      {loading && <SpinnerOverlay />}
       {error && <div className="text-center text-red-500 text-lg">{typeof error === 'object' && 'message' in error ? error.message : String(error)}</div>}
       {!loading && !error && reports.length === 0 && (
         <div className="text-center text-gray-400 text-lg">No reports found.</div>

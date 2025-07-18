@@ -91,7 +91,8 @@ const NasaRoversView: React.FC = () => {
             {ROVERS.map((r, idx) => (
               <button
                 key={r}
-                className={`px-3 py-1 rounded-md font-semibold text-sm transition-colors duration-200 ${selectedRover === idx ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-blue-500'}`}
+                className={`px-1 py-1 sm:px-3 text-sm sm:text-base landscape:text-sm landscape:sm:text-base rounded-md font-semibold text-sm transition-colors duration-200 
+                  ${selectedRover === idx ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-blue-500'}`}
                 onClick={() => setSelectedRover(idx)}
               >
                 {r.charAt(0).toUpperCase() + r.slice(1)}
