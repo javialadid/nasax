@@ -22,6 +22,7 @@ You need a NASA API key for the backend. Get one at https://api.nasa.gov/
 ---
 
 ## Project Structure
+You can find more details about each subproject in their README:
 
 - [Frontend (NasaX)](frontend/README.md):
   - Modern React app (Vite, TypeScript, Tailwind CSS)
