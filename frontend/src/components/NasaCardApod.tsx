@@ -15,16 +15,18 @@ const CARD_IMG_HEIGHT = 300;
 const MAX_DAYS_BACK = getMaxDaysBackEpic();
 
 const NasaCardApod: React.FC = () => {
-  const { apodData, setApodData } = useNasaCardData();
-  const [loading, setLoading] = useState(!apodData);
-  const [noRecentData, setNoRecentData] = useState(false);
+  const today = getEasternDateString();
+  const { apodByDate, setApodDataForDate, setApodEmptyForDate } = useNasaCardData();
+  const apodEntry = apodByDate[today];
+  const [loading, setLoading] = useState(!apodEntry);
+  const [noRecentData, setNoRecentData] = useState(apodEntry ? apodEntry.empty : false);
   // Track timeouts to clear on unmount
   const timeouts = React.useRef<number[]>([]);
 
   useEffect(() => {
-    if (apodData) {
+    if (apodEntry) {
       setLoading(false);
-      setNoRecentData(false);
+      setNoRecentData(apodEntry.empty);
       return;
     }
     let isMounted = true;
@@ -41,11 +43,12 @@ const NasaCardApod: React.FC = () => {
             }, delay);
             timeouts.current.push(timeoutId);
           } else if (isMounted) {
+            setApodEmptyForDate(today);
             setNoRecentData(true);
             setLoading(false);
           }
         } else if (isMounted) {
-          setApodData(json);
+          setApodDataForDate(today, json);
           setNoRecentData(false);
           setLoading(false);
         }
@@ -58,6 +61,7 @@ const NasaCardApod: React.FC = () => {
           }, delay);
           timeouts.current.push(timeoutId);
         } else if (isMounted) {
+          setApodEmptyForDate(today);
           setNoRecentData(true);
           setLoading(false);
         }
@@ -65,19 +69,19 @@ const NasaCardApod: React.FC = () => {
     };
     setLoading(true);
     setNoRecentData(false);
-    fetchData(getEasternDateString(), 0); // no delay param needed, default is 1000ms
+    fetchData(today, 0); // no delay param needed, default is 1000ms
     return () => {
       isMounted = false;
       timeouts.current.forEach(clearTimeout);
       timeouts.current = [];
     };
-  }, [setApodData]);
+  }, [apodEntry, setApodDataForDate, setApodEmptyForDate, today]);
 
   // Prefer the smallest available image for the card
-  const image = apodData && apodData.url ? apodData.url : DEFAULT_IMAGE;
-  const apiTitle = apodData && apodData.title ? apodData.title : '';
-  const apiExplanation = apodData && apodData.explanation ? firstSentence(apodData.explanation) : '';
-  const ariaLabel = apodData && apodData.title ? apodData.title : DEFAULT_TITLE;
+  const image = apodEntry && apodEntry.data && apodEntry.data.url ? apodEntry.data.url : DEFAULT_IMAGE;
+  const apiTitle = apodEntry && apodEntry.data && apodEntry.data.title ? apodEntry.data.title : '';
+  const apiExplanation = apodEntry && apodEntry.data && apodEntry.data.explanation ? firstSentence(apodEntry.data.explanation) : '';
+  const ariaLabel = apiTitle || DEFAULT_TITLE;
 
   return (
     <Link to="/apod" style={{ textDecoration: 'none' }}>
@@ -107,7 +111,7 @@ const NasaCardApod: React.FC = () => {
           {DEFAULT_TITLE}
         </div>
         {/* When data is loaded, show API title and first sentence at the bottom */}
-        {apodData && !noRecentData && (
+        {apodEntry && apodEntry.data && !noRecentData && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">
             <div className="font-semibold text-base truncate">{apiTitle}</div>
             <div className="text-xs text-gray-300 mt-1">{apiExplanation}</div>

@@ -6,9 +6,23 @@ type RoversData = any; // Replace with a more specific type if available
 type DonkiData = any; // Replace with a more specific type if available
 // Epic card is static, so no data needed
 
+// New APOD/EPIC context type for multiple dates
+interface ApodDateEntry {
+  data: ApodData | null;
+  empty: boolean;
+}
+interface EpicDateEntry {
+  data: any | null;
+  empty: boolean;
+}
+
 interface NasaCardDataContextType {
-  apodData: ApodData | null;
-  setApodData: (data: ApodData) => void;
+  apodByDate: { [date: string]: ApodDateEntry };
+  setApodDataForDate: (date: string, data: ApodData) => void;
+  setApodEmptyForDate: (date: string) => void;
+  epicByDate: { [date: string]: EpicDateEntry };
+  setEpicDataForDate: (date: string, data: any) => void;
+  setEpicEmptyForDate: (date: string) => void;
   roversData: RoversData[];
   setRoversData: (data: RoversData[]) => void;
   donkiData: DonkiData | null;
@@ -19,18 +33,48 @@ interface NasaCardDataContextType {
 const NasaCardDataContext = createContext<NasaCardDataContextType | undefined>(undefined);
 
 export const NasaCardDataProvider = ({ children }: { children: ReactNode }) => {
-  const [apodData, setApodData] = useState<ApodData | null>(null);
+  const [apodByDate, setApodByDate] = useState<{ [date: string]: ApodDateEntry }>({});
+  const [epicByDate, setEpicByDate] = useState<{ [date: string]: EpicDateEntry }>({});
   const [roversData, setRoversData] = useState<RoversData[]>([]);
   const [donkiData, setDonkiData] = useState<DonkiData | null>(null);
 
+  const setApodDataForDate = (date: string, data: ApodData) => {
+    setApodByDate(prev => ({
+      ...prev,
+      [date]: { data, empty: false },
+    }));
+  };
+
+  const setApodEmptyForDate = (date: string) => {
+    setApodByDate(prev => ({
+      ...prev,
+      [date]: { data: null, empty: true },
+    }));
+  };
+
+  const setEpicDataForDate = (date: string, data: any) => {
+    setEpicByDate(prev => ({
+      ...prev,
+      [date]: { data, empty: false },
+    }));
+  };
+
+  const setEpicEmptyForDate = (date: string) => {
+    setEpicByDate(prev => ({
+      ...prev,
+      [date]: { data: null, empty: true },
+    }));
+  };
+
   const clearAll = () => {
-    setApodData(null);
+    setApodByDate({});
+    setEpicByDate({});
     setRoversData([]);
     setDonkiData(null);
   };
 
   return (
-    <NasaCardDataContext.Provider value={{ apodData, setApodData, roversData, setRoversData, donkiData, setDonkiData, clearAll }}>
+    <NasaCardDataContext.Provider value={{ apodByDate, setApodDataForDate, setApodEmptyForDate, epicByDate, setEpicDataForDate, setEpicEmptyForDate, roversData, setRoversData, donkiData, setDonkiData, clearAll }}>
       {children}
     </NasaCardDataContext.Provider>
   );

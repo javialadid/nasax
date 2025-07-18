@@ -6,6 +6,8 @@ import { useSearchParams } from 'react-router-dom';
 import SpinnerOverlay from '@components/SpinnerOverlay';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { getMaxDaysBackEpic } from '@/utils/env';
+import { useNasaCardData } from '@/NasaCardDataContext';
+import { getApiBaseUrl } from '@/utils/env';
 
 // Logging utility for debugging
 const log = (message: string, data: any) => {
@@ -51,46 +53,66 @@ const ApodView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const oldestAllowed = addDays(today, -MAX_DAYS_BACK);
 
+  // Context for APOD data by date
+  const { apodByDate, setApodDataForDate, setApodEmptyForDate } = useNasaCardData();
+
   // Initialize currentDate from URL or default to today
   const [currentDate, setCurrentDate] = useState(() => {
     const urlDate = searchParams.get('date');
     const initialDate = urlDate ? clampDateToRange(urlDate, oldestAllowed, today) : today;
-    
     return initialDate;
   });
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
 
-  // Fetch data with useNasaApi
-  const { data, loading, error } = useNasaApi('planetary/apod', { date: currentDate }, { refetchOnMount: true });
+  // Get APOD entry for the current date from context
+  const apodEntry = apodByDate[currentDate];
 
-  // Log API response for debugging
+  // Fetch data only if not present in context
   useEffect(() => {
-    //log('API response', { data, loading, error, currentDate });
-  }, [data, loading, error, currentDate]);
-
-  // Auto-retry logic when no data is returned
-  useEffect(() => {
-    if (!loading && (!data?.url || !data?.title || !data?.explanation) && retryCount < MAX_DAYS_BACK) {
-      const prevDate = addDays(currentDate, -1);
-      if (prevDate >= oldestAllowed) {
-        log('Retrying with previous date', { prevDate, retryCount });
-        setCurrentDate(prevDate);
-        setRetryCount(count => count + 1);
-        setSearchParams({ date: prevDate }, { replace: true });
+    if (apodEntry) return;
+    let isMounted = true;
+    const fetchData = async (date: string, backCount: number) => {
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/planetary/apod?date=${date}`);
+        const json = await res.json();
+        if (!json || !json.url) {
+          if (backCount < MAX_DAYS_BACK) {
+            const prevDate = addDays(date, -1);
+            if (isMounted) {
+              setCurrentDate(prevDate);
+              setRetryCount(count => count + 1);
+              setSearchParams({ date: prevDate }, { replace: true });
+            }
+          } else if (isMounted) {
+            setApodEmptyForDate(date);
+          }
+        } else if (isMounted) {
+          setApodDataForDate(date, json);
+        }
+      } catch (e) {
+        if (backCount < MAX_DAYS_BACK) {
+          const prevDate = addDays(date, -1);
+          if (isMounted) {
+            setCurrentDate(prevDate);
+            setRetryCount(count => count + 1);
+            setSearchParams({ date: prevDate }, { replace: true });
+          }
+        } else if (isMounted) {
+          setApodEmptyForDate(date);
+        }
       }
-    } else if (data?.url) {      
-      setRetryCount(0);
-    }
-  }, [data, loading, currentDate, oldestAllowed, retryCount, setSearchParams]);
+    };
+    fetchData(currentDate, retryCount);
+    return () => { isMounted = false; };
+  }, [apodEntry, currentDate, retryCount, setApodDataForDate, setApodEmptyForDate, setSearchParams]);
 
   // Sync currentDate with URL changes (e.g., back button)
   useEffect(() => {
     const urlDate = searchParams.get('date');
     const newDate = urlDate ? clampDateToRange(urlDate, oldestAllowed, today) : today;
     if (newDate !== currentDate) {
-      log('Syncing currentDate with URL', { urlDate, newDate, currentDate });
       setCurrentDate(newDate);
       setRetryCount(0); // Reset retry count on manual URL change
     }
@@ -99,14 +121,12 @@ const ApodView = () => {
   // Navigation handlers
   const handlePrev = () => {
     const newDate = addDays(currentDate, -1);
-    log('Navigating to previous date', { newDate });
     setCurrentDate(newDate);
     setSearchParams({ date: newDate });
   };
 
   const handleNext = () => {
     const newDate = addDays(currentDate, 1);
-    log('Navigating to next date', { newDate });
     setCurrentDate(newDate);
     setSearchParams({ date: newDate });
   };
@@ -115,20 +135,19 @@ const ApodView = () => {
   const canGoPrev = daysBack < MAX_DAYS_BACK;
   const canGoNext = currentDate !== today;
 
+  // Use context data if available
+  const data = apodEntry && apodEntry.data ? apodEntry.data : null;
+  const empty = apodEntry && apodEntry.empty;
   const imageUrl = data?.hdurl || data?.url;
 
   // Loading and error states
-  if (loading && !data) {    
+  if (!apodEntry && retryCount === 0) {
     return <SpinnerOverlay />;
   }
-  if (error) {    
-    return <div className="text-red-500 text-center my-8">Error Loading Data</div>;
-  }
-  if (retryCount >= MAX_DAYS_BACK) {
-    log('Max retries reached', { retryCount, MAX_DAYS_BACK });
+  if (empty) {
     return <div className="text-gray-400 text-center my-8">No APOD found for the last {MAX_DAYS_BACK} days.</div>;
   }
-  if (!data?.title || !data?.url || !data?.explanation) {    
+  if (!data?.title || !data?.url || !data?.explanation) {
     return <div className="text-gray-400 text-center my-8">No data available.</div>;
   }
 
