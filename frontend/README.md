@@ -11,12 +11,12 @@ Areas of focus:
 * Fluid design that works well in any screen size or orientation
 * Maximizing picture content on screen
 
-## Custom carousel 
-Shows sequences of pictures. It allows 
-* navigation 
-* thumbnails navigation with dragging scroll for desktop and mobile
-* autoplay
-* zoom and pinch
+### Custom carousel 
+Shows sequences of pictures. It allows: 
+* Navigation 
+* Thumbnails navigation with dragging scroll for desktop and mobile
+* Autoplay
+* Fullscreen with zoom and pinch
 
 ## Design Choices
 
