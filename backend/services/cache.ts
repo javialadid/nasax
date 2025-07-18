@@ -11,9 +11,10 @@ export interface SimpleCache {
 }
 
 // In-memory cache implementation
-const cache: SimpleCache = {
+const cache: SimpleCache & { getStats?: () => any } = {
   get: (key) => memoryCache.get(key),
   set: (key, value, ttl) => { memoryCache.set(key, value, ttl ?? cacheTTL); },
+  getStats: () => memoryCache.getStats(),
 };
 
 /**
@@ -22,8 +23,7 @@ const cache: SimpleCache = {
  * - Sort query parameters
  * - Remove trailing slashes
  * - Remove duplicate slashes
- * - Remove default ports (80, 443)
- * Query string parameter order would generate different cache keys.
+ * - Remove default ports (80, 443) 
  */
 export function cacheKeyFromUrl(url: string): string {
   try {
