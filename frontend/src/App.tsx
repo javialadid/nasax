@@ -15,12 +15,39 @@ import NasaCardInsight from '@/components/NasaCardInsight';
 import ScrollableView from '@/components/ScrollableView';
 import { NasaCardDataProvider } from '@/NasaCardDataContext';
 import React, { Suspense } from 'react';
+
+import { useEffect } from 'react';
+
+// Declare gtag on the window object for TypeScript
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 const logo = '/logo_nasax_alpha.png';
+
+const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+
+// only if we gave GA_MEASUREMENT_ID we send events
+function usePageViews() {
+  const location = useLocation();
+  useEffect(() => {
+    if (GA_MEASUREMENT_ID && window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_path: location.pathname + location.search,
+        page_location: window.location.href,
+        send_to: GA_MEASUREMENT_ID,
+      });
+    }
+  }, [location]);
+}
 
 const LazyInsightView = React.lazy(() => import('@/components/views/InsightView'));
 
 function App() {
   const location = useLocation();
+  usePageViews();
   function getNavLabel(pathname: string) {
     if (pathname === '/apod') return 'Astronomy Picture of the Day';
     if (pathname === '/epic') return 'Earth Polychromatic Imaging Camera (EPIC)';
