@@ -17,8 +17,7 @@ const InsightView: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col w-full max-w-5xl mx-auto min-h-0 h-full flex-1 py-2 px-2 gap-8 overflow-auto" style={{ maxHeight: '100vh' }}>
-      <h1 className="text-2xl font-bold text-center text-orange-200 mb-2 tracking-widest" style={{ letterSpacing: 2 }}>InSight Mars Weather</h1>
+    <div className="flex flex-col w-full max-w-5xl mx-auto min-h-0 h-full flex-1 py-2 px-2 gap-8 overflow-auto" style={{ maxHeight: '100vh' }}>      
       {loading && <div className="text-center text-lg text-gray-400">Loading weather data...</div>}
       {error && <div className="text-center text-red-500 text-lg">{typeof error === 'object' && 'message' in error ? error.message : String(error)}</div>}
       {!loading && !error && (
