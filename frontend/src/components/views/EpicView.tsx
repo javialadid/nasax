@@ -6,6 +6,7 @@ import Carousel from '@components/Carousel';
 import { getEasternDateString, addDays } from '@/utils/dateutil';
 import { getMaxDaysBackEpic } from '@/utils/env';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { useNasaCardData } from '@/NasaCardDataContext';
 
 const MAX_DAYS_BACK = getMaxDaysBackEpic()
 const EPIC_API_PATH = 'EPIC/api/natural/date/';
@@ -108,9 +109,11 @@ const EpicView: React.FC = () => {
   const urlDate = searchParams.get('date');
   const [searchingForRecent, setSearchingForRecent] = useState(false);
   const [mostRecentWithImages, setMostRecentWithImages] = useState<string | null>(null);
-  const [noImagesForDate, setNoImagesForDate] = useState<string | null>(null);
   const [showZoomModal, setShowZoomModal] = useState(false);
-  const isUserNavigating = useRef(false); // NEW
+  const isUserNavigating = useRef(false);
+
+  // Context for EPIC data by date
+  const { epicByDate, setEpicDataForDate, setEpicEmptyForDate } = useNasaCardData();
 
   // Derive currentDate from urlDate or mostRecentWithImages
   const currentDate = urlDate || mostRecentWithImages;
@@ -159,65 +162,65 @@ const EpicView: React.FC = () => {
     }
   }, [urlDate, today, setSearchParams]);
 
-  // If a date param is present, check if it has images
+  // If a date param is present, check if it has images and update context
   useEffect(() => {
     if (urlDate) {
       let cancelled = false;
       const check = async () => {
         try {
           const json = await nasaApiFetch(`EPIC/api/natural/date/${urlDate}`);
-          console.log('[EpicView] useEffect check images for urlDate', { urlDate, json });
           if (!cancelled) {
-            if (!Array.isArray(json) || json.length === 0) {
-              setNoImagesForDate(urlDate);
-              // Only auto-redirect if this is the first load (not user navigation)
-              if (!isUserNavigating.current && !mostRecentWithImages) {
-                let checkDate = today;
-                let tries = 0;
-                let found = false;
-                while (tries < MAX_DAYS_BACK && !found) {
-                  try {
-                    const json2 = await nasaApiFetch(`EPIC/api/natural/date/${checkDate}`);
-                    console.log('[EpicView] Searching for most recent with images', { checkDate, json2 });
-                    if (Array.isArray(json2) && json2.length > 0) {
-                      setMostRecentWithImages(checkDate);
-                      setSearchParams({ date: checkDate }, { replace: true });
-                      found = true;
-                      break;
-                    }
-                  } catch (err) {
-                    console.log('[EpicView] Error searching for most recent with images', { checkDate, err });
-                  }
-                  checkDate = addDays(checkDate, -1);
-                  tries++;
-                }
-              }
+            if (Array.isArray(json) && json.length > 0) {
+              setEpicDataForDate(urlDate, json);
             } else {
-              setNoImagesForDate(null);
+              setEpicEmptyForDate(urlDate);
             }
           }
         } catch (err) {
-          console.log('[EpicView] Error fetching images for urlDate', { urlDate, err });
+          if (!cancelled) setEpicEmptyForDate(urlDate);
         } finally {
-          isUserNavigating.current = false; // Reset after check
+          isUserNavigating.current = false;
         }
       };
       check();
       return () => { cancelled = true; };
     }
-  }, [urlDate, today, setSearchParams, mostRecentWithImages]);
+  }, [urlDate, setEpicDataForDate, setEpicEmptyForDate]);
 
-  // Only fetch images if we have a valid currentDate and not searching
-  const { data, loading, error } = useNasaApi(currentDate ? `${EPIC_API_PATH}${currentDate}` : '', {});
+  // Get EPIC entry for the current date from context
+  const epicEntry = currentDate ? epicByDate[currentDate] : undefined;
   const [carouselIdx, setCarouselIdx] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
   const lastRequestedDate = useRef<string | null>(currentDate);
+
+  // Fetch data only if not present in context (for mostRecentWithImages case)
+  useEffect(() => {
+    if (!currentDate || epicEntry) return;
+    let isMounted = true;
+    const fetchData = async (date: string) => {
+      try {
+        const res = await fetch(`/EPIC/api/natural/date/${date}`);
+        const json = await res.json();
+        if (!Array.isArray(json) || json.length === 0) {
+          if (isMounted) setEpicEmptyForDate(date);
+        } else if (isMounted) {
+          setEpicDataForDate(date, json);
+        }
+      } catch (e) {
+        if (isMounted) setEpicEmptyForDate(date);
+      }
+    };
+    fetchData(currentDate);
+    return () => { isMounted = false; };
+  }, [currentDate, epicEntry, setEpicDataForDate, setEpicEmptyForDate]);
 
   useEffect(() => {
     lastRequestedDate.current = currentDate;
   }, [currentDate]);
 
-  // Build array of image URLs from data
+  // Build array of image URLs from context data
+  const data = epicEntry && epicEntry.data ? epicEntry.data : null;
+  const empty = epicEntry && epicEntry.empty;
   const imageUrls = data && Array.isArray(data)
     ? data.map(img => {
         const dateParts = img.date.split(' ');
@@ -228,7 +231,7 @@ const EpicView: React.FC = () => {
   const currentImg = data && Array.isArray(data) && data[carouselIdx];
 
   // Early return: loading
-  if (searchingForRecent || (loading && !data)) {
+  if (searchingForRecent || (!epicEntry && currentDate)) {
     return (
       <div className="relative p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
         <EpicLoading />
@@ -236,17 +239,8 @@ const EpicView: React.FC = () => {
     );
   }
 
-  // Early return: error
-  if (error) {
-    return (
-      <div className="p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
-        <EpicError message={error.message} />
-      </div>
-    );
-  }
-
   // Early return: no images
-  if (!data || !Array.isArray(data) || data.length === 0) {
+  if (empty) {
     return (
       <div className="p-4 h-[calc(100vh-4rem)] flex min-h-0 min-w-0 portrait:flex-col portrait:items-stretch landscape:items-start">
         {/* Image Section: show No Images message */}
@@ -255,9 +249,9 @@ const EpicView: React.FC = () => {
         >
           <div className="w-full h-full flex items-center justify-center flex-shrink-0">
             <EpicNoImages
-              mostRecentWithImages={noImagesForDate && mostRecentWithImages ? mostRecentWithImages : null}
+              mostRecentWithImages={mostRecentWithImages}
               setSearchParams={setSearchParams}
-              setNoImagesForDate={setNoImagesForDate}
+              setNoImagesForDate={() => {}}
             />
           </div>
         </div>
@@ -271,7 +265,6 @@ const EpicView: React.FC = () => {
             <button
               onClick={() => {
                 const newDate = clampDate(addDays(currentDate || today, -1));
-                console.log('[EpicView] Prev button clicked:', { currentDate, newDate, oldestAllowed, today });
                 isUserNavigating.current = true;
                 setSearchParams({ date: newDate });
               }}
@@ -287,7 +280,6 @@ const EpicView: React.FC = () => {
             <button
               onClick={() => {
                 const newDate = clampDate(addDays(currentDate || today, 1));
-                console.log('[EpicView] Next button clicked:', { currentDate, newDate, oldestAllowed, today });
                 isUserNavigating.current = true;
                 setSearchParams({ date: newDate });
               }}
