@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getEasternDateString, addDays } from '@/utils/dateutil';
 import { firstSentence } from '@/utils/stringutil';
 import { getMaxDaysBackEpic } from '@/utils/env';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 
 const DEFAULT_IMAGE = '/default-apod.png'; // Place a default image in public/

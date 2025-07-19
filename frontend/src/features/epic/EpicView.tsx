@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getEasternDateString, addDays, clampDateToRange } from '@/utils/dateutil';
 import { getMaxDaysBackEpic } from '@/utils/env';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 import SpinnerOverlay from '@components/SpinnerOverlay';
 import ZoomModal from '@components/ZoomModal';
 import EpicImageSection from './EpicImageSection';

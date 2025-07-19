@@ -4,8 +4,8 @@ import { prepareChartData } from '@/utils/marsWeatherUtils';
 import { CHART_COLORS } from '@/constants/marsWeather';
 import { InsightWeatherApiResponse } from '@/types/marsWeather';
 import ChartContainer from '@/components/ChartContainer';
-import MarsLineChart from '@/components/MarsLineChart';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import MarsLineChart from '@/features/insight/MarsLineChart';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 
 const API_ENDPOINT = 'insight_weather/';
 const API_PARAMS = { feedtype: 'json', ver: '1.0' };

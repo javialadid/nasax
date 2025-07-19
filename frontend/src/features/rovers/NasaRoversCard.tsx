@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 
 const DEFAULT_IMAGE = '/rovers_card.png'; 

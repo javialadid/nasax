@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { useNasaApi } from '@/hooks/useNasaApi';
 import { getEasternDateString, addDays } from '@/utils/dateutil';
-import DonkiAiReport from '@components/DonkiAiReport';
+import DonkiAiReport from './DonkiAiReport';
 import SpinnerOverlay from '@components/SpinnerOverlay';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 
 const API_ENDPOINT = 'DONKI/notifications';
 const today = getEasternDateString();

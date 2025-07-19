@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import SpinnerOverlay from '@components/SpinnerOverlay';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { getMaxDaysBackEpic } from '@/utils/env';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 import { getApiBaseUrl } from '@/utils/env';
 import ZoomModal from '@components/ZoomModal';
 

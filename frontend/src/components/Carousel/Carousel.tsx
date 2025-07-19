@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from 'react';
-import CarouselThumbnailBar from '@components/CarouselThumbnailBar';
-import CarouselMain from '@components/CarouselMain';
-import CarouselIndicators from '@components/CarouselIndicators';
-import CarouselControls from '@components/CarouselControls';
+import CarouselThumbnailBar from '@components/Carousel/CarouselThumbnailBar';
+import CarouselMain from '@components/Carousel/CarouselMain';
+import CarouselIndicators from '@components/Carousel/CarouselIndicators';
+import CarouselControls from '@components/Carousel/CarouselControls';
 
 /**
  * CarouselProps defines the props for the Carousel component.

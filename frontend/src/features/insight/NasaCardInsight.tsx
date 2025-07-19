@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNasaApi } from '@/hooks/useNasaApi';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/mars-weather.jpg';
 const DEFAULT_TITLE = 'InSight Mars Weather';

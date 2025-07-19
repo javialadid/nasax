@@ -1,6 +1,6 @@
 import React from 'react';
-import Carousel from '@components/Carousel';
-import ZoomModal from '@components/ZoomModal';
+import Carousel from '../../components/Carousel/Carousel';
+import ZoomModal from '../../components/ZoomModal';
 
 interface EpicImageSectionProps {
   imageUrls: string[];

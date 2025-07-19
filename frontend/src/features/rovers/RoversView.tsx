@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 import SpinnerOverlay from '@components/SpinnerOverlay';
-import Carousel from '@components/Carousel';
+import Carousel from '@/components/Carousel/Carousel';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 import { getApiBaseUrl } from '@/utils/env';
 import ZoomModal from '@components/ZoomModal';
 
