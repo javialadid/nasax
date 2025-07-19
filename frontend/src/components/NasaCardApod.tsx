@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getApiBaseUrl } from '@/utils/env';
 import { getEasternDateString, addDays } from '@/utils/dateutil';
 import { firstSentence } from '@/utils/stringutil';
 import { getMaxDaysBackEpic } from '@/utils/env';
 import { useNasaCardData } from '@/NasaCardDataContext';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 
 const DEFAULT_IMAGE = '/default-apod.png'; // Place a default image in public/
 const DEFAULT_TITLE = 'Astronomy Picture of the Day';
@@ -18,65 +18,39 @@ const NasaCardApod: React.FC = () => {
   const today = getEasternDateString();
   const { apodByDate, setApodDataForDate, setApodEmptyForDate } = useNasaCardData();
   const apodEntry = apodByDate[today];
-  const [loading, setLoading] = useState(!apodEntry);
-  const [noRecentData, setNoRecentData] = useState(apodEntry ? apodEntry.empty : false);
-  // Track timeouts to clear on unmount
-  const timeouts = React.useRef<number[]>([]);
+  const MAX_DAYS_BACK = getMaxDaysBackEpic();
 
-  useEffect(() => {
-    if (apodEntry) {
-      setLoading(false);
-      setNoRecentData(apodEntry.empty);
-      return;
-    }
-    let isMounted = true;
-    const fetchData = async (date: string, backCount: number, delay: number = 1000) => {
+  // Fetcher that tries today, then previous days up to MAX_DAYS_BACK
+  const fetchApodWithBacktrack = async () => {
+    let date = today;
+    for (let i = 0; i <= MAX_DAYS_BACK; i++) {
       try {
-        const res = await fetch(`${getApiBaseUrl()}/planetary/apod?date=${date}`);
-        const json = await res.json();
-        if (!json || !json.url) {
-          if (backCount < MAX_DAYS_BACK) {
-            const prevDate = addDays(date, -1);
-            const nextDelay = Math.min(delay + 1000, 60000);
-            const timeoutId = window.setTimeout(() => {
-              fetchData(prevDate, backCount + 1, nextDelay);
-            }, delay);
-            timeouts.current.push(timeoutId);
-          } else if (isMounted) {
-            setApodEmptyForDate(today);
-            setNoRecentData(true);
-            setLoading(false);
-          }
-        } else if (isMounted) {
-          setApodDataForDate(today, json);
-          setNoRecentData(false);
-          setLoading(false);
+        const data = await nasaApiFetch('planetary/apod', { date });
+        if (data && data.url) {
+          return data;
         }
       } catch (e) {
-        if (backCount < MAX_DAYS_BACK) {
-          const prevDate = addDays(date, -1);
-          const nextDelay = Math.min(delay + 1000, 60000);
-          const timeoutId = window.setTimeout(() => {
-            fetchData(prevDate, backCount + 1, nextDelay);
-          }, delay);
-          timeouts.current.push(timeoutId);
-        } else if (isMounted) {
-          setApodEmptyForDate(today);
-          setNoRecentData(true);
-          setLoading(false);
-        }
+        // Only try previous day if not last attempt
+        if (i === MAX_DAYS_BACK) throw e;
       }
-    };
-    setLoading(true);
-    setNoRecentData(false);
-    fetchData(today, 0); // no delay param needed, default is 1000ms
-    return () => {
-      isMounted = false;
-      timeouts.current.forEach(clearTimeout);
-      timeouts.current = [];
-    };
-  }, [apodEntry, setApodDataForDate, setApodEmptyForDate, today]);
+      date = addDays(date, -1);
+    }
+    // If none found, throw a custom error
+    throw new Error('No APOD found for recent days');
+  };
 
+  const { data, loading, error } = useApiWithBackoff(fetchApodWithBacktrack, [today], { delay: 1000, maxAttempts: 1, enabled: !apodEntry });
+
+  // Update context when data or error changes
+  useEffect(() => {
+    if (!apodEntry && data) {
+      setApodDataForDate(today, data);
+    } else if (!apodEntry && error && error.message === 'No APOD found for recent days') {
+      setApodEmptyForDate(today);
+    }
+  }, [data, error, apodEntry, setApodDataForDate, setApodEmptyForDate, today]);
+
+  const noRecentData = apodEntry ? apodEntry.empty : (error && error.message === 'No APOD found for recent days');
   // Prefer the smallest available image for the card
   const image = apodEntry && apodEntry.data && apodEntry.data.url ? apodEntry.data.url : DEFAULT_IMAGE;
   const apiTitle = apodEntry && apodEntry.data && apodEntry.data.title ? apodEntry.data.title : '';

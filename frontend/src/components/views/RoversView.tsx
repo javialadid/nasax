@@ -1,15 +1,56 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useNasaApi } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 import SpinnerOverlay from '@components/SpinnerOverlay';
 import Carousel from '@components/Carousel';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { useNasaCardData } from '@/NasaCardDataContext';
+import { getApiBaseUrl } from '@/utils/env';
+import ZoomModal from '@components/ZoomModal';
 
 const ROVERS = ['perseverance', 'curiosity', 'opportunity', 'spirit'];
 
 const NasaRoversView: React.FC = () => {
   const [selectedRover, setSelectedRover] = useState(0);
   const rover = ROVERS[selectedRover];
-  const { data, loading, error } = useNasaApi(`mars-photos/api/v1/rovers/${rover}/latest_photos`);
+  const { roversData, setRoversData } = useNasaCardData();
+  // Try to find data for the selected rover in context
+  const roverEntry = roversData.find((r: any) => r.rover === rover);
+  const [data, setData] = useState<any>(roverEntry ? { latest_photos: roverEntry.photos } : null);
+
+  // Fetcher for the selected rover
+  const fetchRoverPhotos = async () => {
+    const json = await nasaApiFetch(`mars-photos/api/v1/rovers/${rover}/latest_photos`);
+    return json;
+  };
+
+  const { data: fetched, loading, error } = useApiWithBackoff(
+    fetchRoverPhotos,
+    [rover],
+    { enabled: !roverEntry }
+  );
+
+  // Update context and local state when data is fetched
+  useEffect(() => {
+    if (!roverEntry && fetched) {
+      if (fetched.latest_photos && fetched.latest_photos.length > 0) {
+        setRoversData([
+          ...roversData.filter((r: any) => r.rover !== rover),
+          { rover, photos: fetched.latest_photos }
+        ]);
+        setData({ latest_photos: fetched.latest_photos });
+      } else {
+        setData({ latest_photos: [] });
+      }
+    } else if (roverEntry) {
+      setData({ latest_photos: roverEntry.photos });
+    }
+  }, [fetched, roverEntry, setRoversData, roversData, rover]);
+
+  // Debug logs
+  console.log('[RoversView] rover:', rover);
+  console.log('[RoversView] roverEntry:', roverEntry);
+  console.log('[RoversView] roversData:', roversData);
+  console.log('[RoversView] data:', data);
 
   const solGroups = useMemo(() => {
     if (!data?.latest_photos) return [];
@@ -187,20 +228,15 @@ const NasaRoversView: React.FC = () => {
 
       {/* Fullscreen Modal */}
       {showFullscreen && currentImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-          <TransformWrapper ref={transformRef}>
-            <TransformComponent>
-              <img
-                src={currentImage.img_src}
-                alt={currentImage.camera?.full_name}
-                className="max-w-screen-xl max-h-screen-xl object-contain"
-              />
-            </TransformComponent>
-          </TransformWrapper>
-          <button onClick={() => setShowFullscreen(false)} className="absolute top-4 right-4 text-white text-2xl">&times;</button>
-          <button onClick={() => handleIndexChange(currentImageIdx - 1)} disabled={currentImageIdx === 0} className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl disabled:opacity-50">&lt;</button>
-          <button onClick={() => handleIndexChange(currentImageIdx + 1)} disabled={currentImageIdx === filteredImages.length - 1} className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl disabled:opacity-50">&gt;</button>
-        </div>
+        <ZoomModal
+          imageUrl={currentImage.img_src}
+          title={currentImage.camera?.full_name}
+          onClose={() => setShowFullscreen(false)}
+          onPrev={currentImageIdx > 0 ? () => handleIndexChange(currentImageIdx - 1) : undefined}
+          onNext={currentImageIdx < filteredImages.length - 1 ? () => handleIndexChange(currentImageIdx + 1) : undefined}
+          canPrev={currentImageIdx > 0}
+          canNext={currentImageIdx < filteredImages.length - 1}
+        />
       )}
     </div>
   );

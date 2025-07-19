@@ -5,21 +5,44 @@ import { CHART_COLORS } from '@/constants/marsWeather';
 import { InsightWeatherApiResponse } from '@/types/marsWeather';
 import ChartContainer from '@/components/ChartContainer';
 import MarsLineChart from '@/components/MarsLineChart';
+import { useNasaCardData } from '@/NasaCardDataContext';
 
 const API_ENDPOINT = 'insight_weather/';
 const API_PARAMS = { feedtype: 'json', ver: '1.0' };
 
 const InsightView: React.FC = () => {
-  const { data, loading, error } = useNasaApi(API_ENDPOINT, API_PARAMS);
+  const { insightWeather, setInsightWeather, setInsightWeatherEmpty } = useNasaCardData();
+  const shouldFetch = !insightWeather.data && !insightWeather.empty;
+  const { data, loading: apiLoading, error } = useNasaApi(API_ENDPOINT, API_PARAMS, { enabled: shouldFetch });
+  const [loading, setLoading] = useState(shouldFetch);
+
+  useEffect(() => {
+    if (insightWeather.data) {
+      setLoading(false);
+      return;
+    }
+    if (!apiLoading && data && data.sol_keys) {
+      setInsightWeather(data);
+      setLoading(false);
+    } else if (!apiLoading && error) {
+      setInsightWeatherEmpty();
+      setLoading(false);
+    } else if (apiLoading && !insightWeather.data) {
+      setLoading(true);
+    }
+  }, [data, apiLoading, error, insightWeather.data, setInsightWeather, setInsightWeatherEmpty]);
+
+  // Use context data for charts
+  const weatherData = insightWeather.data;
   const { temp, tempMin, tempMax, wind, pressure, pressureMin, pressureMax } = useMemo(
-    () => prepareChartData(data as InsightWeatherApiResponse),
-    [data]
+    () => prepareChartData(weatherData as InsightWeatherApiResponse),
+    [weatherData]
   );
 
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto min-h-0 h-full flex-1 py-2 px-2 gap-8 overflow-auto" style={{ maxHeight: '100vh' }}>      
       {loading && <div className="text-center text-lg text-gray-400">Loading weather data...</div>}
-      {error && <div className="text-center text-red-500 text-lg">{typeof error === 'object' && 'message' in error ? error.message : String(error)}</div>}
+      {error && <div className="text-center text-red-500 text-lg">{error.message}</div>}
       {!loading && !error && (
         <>
           <Suspense fallback={<div className='h-70 flex items-center justify-center'>Loading chart...</div>}>

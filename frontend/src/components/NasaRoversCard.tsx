@@ -1,66 +1,55 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getApiBaseUrl } from '@/utils/env';
 import { useNasaCardData } from '@/NasaCardDataContext';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 
 const DEFAULT_IMAGE = '/rovers_card.png'; 
 const DEFAULT_TITLE = 'Mars Rovers';
-const ROVERS = ['perseverance', 'curiosity']; // Only use these two, bad pictures often in the other 2
+const ROVERS = ['perseverance', 'curiosity'];
 
 const CARD_IMG_WIDTH = 400;
 const CARD_IMG_HEIGHT = 300;
 
 const NasaRoversCard: React.FC = () => {
   const { roversData, setRoversData } = useNasaCardData();
-  const [loading, setLoading] = useState(roversData.length === 0);
+
+  // Fetcher for both rovers
+  const fetchRovers = async () => {
+    const results = await Promise.all(
+      ROVERS.map(async rover => {
+        const json = await nasaApiFetch(`mars-photos/api/v1/rovers/${rover}/latest_photos`);
+        const photos = json.latest_photos || [];
+        return { rover, photos };
+      })
+    );
+    // Only keep valid entries
+    const filtered = results.filter(r => r.photos && r.photos.length > 0 && r.photos[0].img_src);
+    if (filtered.length === 0) throw new Error('No valid rover photos');
+    return filtered;
+  };
+
+  const { data: fetchedRovers, loading } = useApiWithBackoff(
+    fetchRovers,
+    [],
+    { enabled: roversData.length === 0 }
+  );
 
   useEffect(() => {
-    if (roversData.length > 0) {
-      setLoading(false);
-      return;
+    if (fetchedRovers && roversData.length === 0) {
+      setRoversData(fetchedRovers);
     }
-    let isMounted = true;
-    setLoading(true);
-    function fetchWithBackoff(rover: string, delay = 1000, attempt = 0): Promise<{ rover: string; photo: any }> {
-      return new Promise(resolve => {
-        const doFetch = async () => {
-          try {
-            const res = await fetch(`${getApiBaseUrl()}/mars-photos/api/v1/rovers/${rover}/latest_photos`);
-            const json = await res.json();
-            const photo = json.latest_photos?.[0] || null;
-            resolve({ rover, photo });
-          } catch {
-            const nextDelay = Math.min(delay + 1000, 60000);
-            setTimeout(() => {
-              fetchWithBackoff(rover, nextDelay, attempt + 1).then(resolve);
-            }, delay);
-          }
-        };
-        doFetch();
-      });
-    }
-    Promise.all(
-      ROVERS.map(rover => fetchWithBackoff(rover))
-    ).then((results: { rover: string; photo: any }[]) => {
-      if (!isMounted) return;
-      const valid = results.filter((r: { rover: string; photo: any }) => r.photo && r.photo.img_src);
-      setRoversData(valid);
-      setLoading(false);
-    });
-    return () => { isMounted = false; };
-  }, [roversData, setRoversData]);
+  }, [fetchedRovers, roversData.length, setRoversData]);
 
-  // Memoize randomIdx so it is stable for the same data
-  const randomIdx = useMemo(() => {
-    if (roversData.length > 0) {
-      return Math.floor(Math.random() * roversData.length);
-    }
-    return null;
-  }, [roversData]);
+  // Pick a new random index only when roversData changes
+  const randomIdx = useMemo(
+    () => roversData.length > 0 ? Math.floor(Math.random() * roversData.length) : -1,
+    [roversData]
+  );
 
-  const show = randomIdx !== null && roversData[randomIdx];
-  const image = show ? roversData[randomIdx].photo.img_src : DEFAULT_IMAGE;
-  const roverName = show ? roversData[randomIdx].rover : '';
+  const selectedEntry = randomIdx >= 0 ? roversData[randomIdx] : null;
+  const show = !!(selectedEntry && Array.isArray(selectedEntry.photos) && selectedEntry.photos.length > 0);
+  const image = show ? selectedEntry.photos[0].img_src : DEFAULT_IMAGE;
+  const roverName = show ? selectedEntry.rover : '';
 
   // Remove broken images from the list
   const handleImgError = () => {
@@ -95,7 +84,7 @@ const NasaRoversCard: React.FC = () => {
         {/* When loaded, show rover name at the bottom */}
         {show && !loading && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">
-            <div className="font-semibold text-base truncate">{roversData[randomIdx].rover.charAt(0).toUpperCase() + roversData[randomIdx].rover.slice(1)}</div>
+            <div className="font-semibold text-base truncate">{roverName.charAt(0).toUpperCase() + roverName.slice(1)}</div>
             <div className="text-xs text-gray-300 mt-1">Latest Mars rover image</div>
           </div>
         )}
