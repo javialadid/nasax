@@ -85,7 +85,7 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
   if (!data) return <div className="text-gray-400">No report data available.</div>;
   const { header, summary, events, outlook, notes, ai_summary } = data;
   return (
-    <div className="max-w-3xl mx-auto px-1 sm:px-2 md:p-4 py-2 md:py-4 bg-gray-950/90 rounded-xl shadow-lg border border-gray-800 text-gray-100">
+    <div className="max-w-5xl mx-auto px-1 sm:px-2 md:p-4 py-2 md:py-4 bg-gray-950/90 rounded-xl shadow-lg border border-gray-800 text-gray-100">
       <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
         <img src={summaryIcon} width={32} height={32} alt="Summary" /> NASA DONKI AI Report </h2>
         <h3>{header?.issue_date ? formatDateTime(header.issue_date) : '-'}</h3>
@@ -120,7 +120,7 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
             <div className="font-semibold mb-1 flex items-center gap-2"><img src={impactIcon} width={32} height={32} alt="CME Impact" /> CME Impacts</div>
             <div className="text-xs text-gray-400 mb-1">All times are in UTC.</div>
             <div className="overflow-x-auto">
-              <table className="min-w-full text-xs border border-gray-700 rounded-lg">
+              <table className="min-w-full text-xs sm:text-xs md:text-sm border border-gray-700 rounded-lg">
                 <thead className="bg-gray-800">
                   <tr>
                     <th className="px-2 py-1">Start Time</th>
@@ -162,7 +162,7 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
       <Section title={`Flares [${events?.flares?.length || 0}]`} icon={<img src={flareIcon} width={32} height={32} alt="Flare" />}>
         {events?.flares && events.flares.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-xs border border-gray-700 rounded-lg">
+            <table className="min-w-full text-xs sm:text-xs md:text-sm border border-gray-700 rounded-lg">
               <thead className="bg-gray-800">
                 <tr>
                   <th className="px-2 py-1">Date</th>
@@ -192,7 +192,7 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
       <Section title={`CMEs (Earth Directed) [${events?.cmes?.earth_directed?.length || 0}]`} icon={<img src={cmeIcon} width={32} height={32} alt="CME" />}>
         {events?.cmes?.earth_directed && events.cmes.earth_directed.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-xs border border-gray-700 rounded-lg">
+            <table className="min-w-full text-xs sm:text-xs md:text-sm border border-gray-700 rounded-lg">
               <thead className="bg-gray-800">
                 <tr>
                   <th className="px-2 py-1">Start Time</th>
@@ -222,7 +222,7 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
       <Section title={`CMEs (Non-Earth Directed) [${events?.cmes?.non_earth_directed?.length || 0}]`} icon={<img src={cmeIcon} width={32} height={32} alt="CME" />}>
         {events?.cmes?.non_earth_directed && events.cmes.non_earth_directed.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-xs border border-gray-700 rounded-lg">
+            <table className="min-w-full text-xs sm:text-xs md:text-sm border border-gray-700 rounded-lg">
               <thead className="bg-gray-800">
                 <tr>
                   <th className="px-2 py-1">Start Time</th>

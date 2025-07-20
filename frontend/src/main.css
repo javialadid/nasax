@@ -14,6 +14,25 @@
   --color-text: #f4f4f5;
 }
 
+/* For Chrome, Edge, and Safari */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #18181b; /* dark background */
+}
+::-webkit-scrollbar-thumb {
+  background: #374151; /* dark gray thumb */
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 #18181b;
+}
+
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
