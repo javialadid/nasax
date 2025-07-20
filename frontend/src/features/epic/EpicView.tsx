@@ -7,7 +7,7 @@ import SpinnerOverlay from '@components/SpinnerOverlay';
 import ZoomModal from '@components/ZoomModal';
 import EpicImageSection from './EpicImageSection';
 import EpicMetadataSection from './EpicMetadataSection';
-import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch,  } from '@/hooks/useNasaApi';
 
 
 const EpicView: React.FC = () => {

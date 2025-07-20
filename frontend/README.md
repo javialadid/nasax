@@ -10,6 +10,9 @@ Areas of focus:
 * User experience
 * Fluid design that works well in any screen size or orientation.
 * Maximizing picture content on screen
+* Snappy navigation
+
+You can have a look [here](https://nasax-xi.vercel.app/)
 
 ### Custom carousel 
 Shows sequences of pictures. It allows: 
@@ -17,6 +20,12 @@ Shows sequences of pictures. It allows:
 * Thumbnails navigation with dragging scroll for desktop and mobile
 * Autoplay
 * Fullscreen with zoom and pinch
+
+## AI Assistance
+Helping summarizing and extracting structured data from poorly formatted data coming from NASA API.
+
+## Service Worker 
+Acting as a cache for those images that lack the proper cache response headers. This made every visit to EPIC always as slow as could be.
 
 ## Design Choices
 

@@ -45,3 +45,4 @@ export function getMaxDaysBackEpic(defaultValue: number = 7): number {
 export function getGaMeasurementId(defaultValue: string = ''): string {
   return getEnv('VITE_GA_MEASUREMENT_ID', defaultValue, 'string');
 }
+

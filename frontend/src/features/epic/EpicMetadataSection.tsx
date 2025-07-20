@@ -51,7 +51,7 @@ const EpicMetadataSection: React.FC<EpicMetadataSectionProps> = ({
           </svg>
         </button>
       </div>
-      <div className="text-gray-200 leading-relaxed overflow-y-auto  flex-1 ">
+      <div className="text-gray-200 px-1 leading-relaxed overflow-y-auto  flex-1 ">
         {currentImg ? (
           <ul className="text-sm space-y-2">
             <li>
