@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import type { InsightWeatherApiResponse } from '@/types/marsWeather';
 
 // Types for each card's data
 type ApodData = any; // Replace with a more specific type if available
 type RoversData = any; // Replace with a more specific type if available
-type DonkiData = any; // Replace with a more specific type if available
-// Epic card is static, so no data needed
+type DonkiData = any[]; // Always an array
+
 
 // New APOD/EPIC context type for multiple dates
 interface ApodDateEntry {
@@ -16,6 +17,12 @@ interface EpicDateEntry {
   empty: boolean;
 }
 
+// InSight Mars Weather context type
+interface InsightWeatherEntry {
+  data: InsightWeatherApiResponse | null;
+  empty: boolean;
+}
+
 interface NasaCardDataContextType {
   apodByDate: { [date: string]: ApodDateEntry };
   setApodDataForDate: (date: string, data: ApodData) => void;
@@ -23,10 +30,15 @@ interface NasaCardDataContextType {
   epicByDate: { [date: string]: EpicDateEntry };
   setEpicDataForDate: (date: string, data: any) => void;
   setEpicEmptyForDate: (date: string) => void;
+  availableEpicDates: string[];
+  setAvailableEpicDates: (dates: string[]) => void;
   roversData: RoversData[];
   setRoversData: (data: RoversData[]) => void;
-  donkiData: DonkiData | null;
+  donkiData: DonkiData;
   setDonkiData: (data: DonkiData) => void;
+  insightWeather: InsightWeatherEntry;
+  setInsightWeather: (data: InsightWeatherApiResponse) => void;
+  setInsightWeatherEmpty: () => void;
   clearAll: () => void;
 }
 
@@ -35,8 +47,20 @@ const NasaCardDataContext = createContext<NasaCardDataContextType | undefined>(u
 export const NasaCardDataProvider = ({ children }: { children: ReactNode }) => {
   const [apodByDate, setApodByDate] = useState<{ [date: string]: ApodDateEntry }>({});
   const [epicByDate, setEpicByDate] = useState<{ [date: string]: EpicDateEntry }>({});
+  const [availableEpicDates, setAvailableEpicDates] = useState<string[]>([]);
   const [roversData, setRoversData] = useState<RoversData[]>([]);
-  const [donkiData, setDonkiData] = useState<DonkiData | null>(null);
+  const [donkiData, _setDonkiData] = useState<DonkiData>([]);
+  const setDonkiData = (data: DonkiData) => {
+    _setDonkiData(data);
+  };
+  const [insightWeather, setInsightWeatherState] = useState<InsightWeatherEntry>({ data: null, empty: false });
+
+  const setInsightWeather = (data: InsightWeatherApiResponse) => {
+    setInsightWeatherState({ data, empty: false });
+  };
+  const setInsightWeatherEmpty = () => {
+    setInsightWeatherState({ data: null, empty: true });
+  };
 
   const setApodDataForDate = (date: string, data: ApodData) => {
     setApodByDate(prev => ({
@@ -70,11 +94,12 @@ export const NasaCardDataProvider = ({ children }: { children: ReactNode }) => {
     setApodByDate({});
     setEpicByDate({});
     setRoversData([]);
-    setDonkiData(null);
+    setDonkiData([]);
+    setInsightWeatherState({ data: null, empty: false });
   };
 
   return (
-    <NasaCardDataContext.Provider value={{ apodByDate, setApodDataForDate, setApodEmptyForDate, epicByDate, setEpicDataForDate, setEpicEmptyForDate, roversData, setRoversData, donkiData, setDonkiData, clearAll }}>
+    <NasaCardDataContext.Provider value={{ apodByDate, setApodDataForDate, setApodEmptyForDate, epicByDate, setEpicDataForDate, setEpicEmptyForDate, availableEpicDates, setAvailableEpicDates, roversData, setRoversData, donkiData, setDonkiData, insightWeather, setInsightWeather, setInsightWeatherEmpty, clearAll }}>
       {children}
     </NasaCardDataContext.Provider>
   );

@@ -1,4 +1,6 @@
 # NASA Explorer
+Explore a subset of NASA API content. 
+This project preprocess and formats some of the data and presents it in a visually appealing way in any device. 
 
 ## Quickstart (Development)
 

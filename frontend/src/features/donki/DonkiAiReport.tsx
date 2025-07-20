@@ -6,6 +6,7 @@ import impactIcon from '@/assets/icons/impact.svg';
 import noteIcon from '@/assets/icons/note.svg';
 import aiIcon from '@/assets/icons/ai.svg';
 import summaryIcon from '@/assets/icons/summary.svg';
+import { formatDateTime, formatShortDateTime } from '@/utils/dateutil';
 
 // Types for the LLM-extracted Donki report
 export interface DonkiAiReportData {
@@ -63,17 +64,6 @@ interface DonkiAiReportProps {
   data: DonkiAiReportData | null | undefined;
 }
 
-function formatDateTime(dateStr?: string) {
-  if (!dateStr) return '-';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-    timeZone: 'UTC',
-  });
-}
-
 const Section: React.FC<{ title: string; defaultOpen?: boolean; children: React.ReactNode; icon?: React.ReactNode }> = ({ title, defaultOpen = false, children, icon }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -97,11 +87,11 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
   return (
     <div className="max-w-3xl mx-auto px-1 sm:px-2 md:p-4 py-2 md:py-4 bg-gray-950/90 rounded-xl shadow-lg border border-gray-800 text-gray-100">
       <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-        <img src={summaryIcon} width={32} height={32} alt="Summary" /> NASA DONKI AI Report</h2>
+        <img src={summaryIcon} width={32} height={32} alt="Summary" /> NASA DONKI AI Report </h2>
+        <h3>{header?.issue_date ? formatDateTime(header.issue_date) : '-'}</h3>
       <div className="mb-4 text-sm text-gray-400">        
         <span>{header?.source || 'NASA Donki Report'}</span> &bull; 
-        <span>{header?.message_type || 'Space Weather Summary'}</span> &bull; 
-        <span>{header?.issue_date ? formatDateTime(header.issue_date) : '-'}</span>
+        <span>{header?.message_type || 'Space Weather Summary'}</span> &bull;         
         {header?.message_id && <span> &bull; <span className="font-mono">{header.message_id}</span></span>}
         <div><b>Processed with AI</b> for your convenience.</div>
       </div>
@@ -147,18 +137,18 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
                         <tr key={i + '-' + j} className="border-t border-gray-700">
                           {j === 0 && (
                             <td className="px-2 py-1 align-top" rowSpan={impact.predicted_impacts!.length}>
-                              {impact.start_time ? formatDateTime(impact.start_time) : '-'}
+                              {impact.start_time ? formatShortDateTime(impact.start_time) : '-'}
                             </td>
                           )}
                           <td className="px-2 py-1">{pred.location || '-'}</td>
                           <td className="px-2 py-1">{pred.impact_type || '-'}</td>
-                          <td className="px-2 py-1">{pred.arrival_time ? formatDateTime(pred.arrival_time) : '-'}</td>
+                          <td className="px-2 py-1">{pred.arrival_time ? formatShortDateTime(pred.arrival_time) : '-'}</td>
                           <td className="px-2 py-1 text-xs text-gray-400 hidden sm:table-cell">{pred.notification || '-'}</td>
                         </tr>
                       ))
                     ) : (
                       <tr key={i} className="border-t border-gray-700">
-                        <td className="px-2 py-1 align-top">{impact.start_time ? formatDateTime(impact.start_time) : '-'}</td>
+                        <td className="px-2 py-1 align-top">{impact.start_time ? formatShortDateTime(impact.start_time) : '-'}</td>
                         <td className="px-2 py-1" colSpan={4}>-</td>
                       </tr>
                     )
@@ -186,10 +176,10 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
               <tbody>
                 {events.flares.map((flare, i) => (
                   <tr key={i} className="border-t border-gray-700">
-                    <td className="px-2 py-1">{flare.date || '-'}</td>
-                    <td className="px-2 py-1">{flare.start_time || '-'}</td>
-                    <td className="px-2 py-1">{flare.stop_time || '-'}</td>
-                    <td className="px-2 py-1">{flare.peak_time || '-'}</td>
+                    <td className="px-2 py-1">{flare.date ? formatShortDateTime(flare.date) : '-'}</td>
+                    <td className="px-2 py-1">{flare.start_time ? formatShortDateTime(flare.start_time) : '-'}</td>
+                    <td className="px-2 py-1">{flare.stop_time ? formatShortDateTime(flare.stop_time) : '-'}</td>
+                    <td className="px-2 py-1">{flare.peak_time ? formatShortDateTime(flare.peak_time) : '-'}</td>
                     <td className="px-2 py-1">{flare.class || '-'}</td>
                     <td className="px-2 py-1">{flare.location || '-'}</td>
                   </tr>
@@ -216,7 +206,7 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
               <tbody>
                 {events.cmes.earth_directed.map((cme, i) => (
                   <tr key={i} className="border-t border-gray-700">
-                    <td className="px-2 py-1">{cme.start_time ? formatDateTime(cme.start_time) : '-'}</td>
+                    <td className="px-2 py-1">{cme.start_time ? formatShortDateTime(cme.start_time) : '-'}</td>
                     <td className="px-2 py-1">{cme.speed?.value || '-'} {cme.speed?.unit || ''}</td>
                     <td className="px-2 py-1">{cme.type || '-'}</td>
                     <td className="px-2 py-1">{cme.direction || '-'}</td>
@@ -246,7 +236,7 @@ const DonkiAiReport: React.FC<DonkiAiReportProps> = ({ data }) => {
               <tbody>
                 {events.cmes.non_earth_directed.map((cme, i) => (
                   <tr key={i} className="border-t border-gray-700">
-                    <td className="px-2 py-1">{cme.start_time ? formatDateTime(cme.start_time) : '-'}</td>
+                    <td className="px-2 py-1">{cme.start_time ? formatShortDateTime(cme.start_time) : '-'}</td>
                     <td className="px-2 py-1">{cme.speed?.value || '-'} {cme.speed?.unit || ''}</td>
                     <td className="px-2 py-1">{cme.type || '-'}</td>
                     <td className="px-2 py-1">{cme.direction || '-'}</td>

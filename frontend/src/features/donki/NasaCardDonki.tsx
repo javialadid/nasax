@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useNasaApi } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 import { firstSentence, getChunkBetween } from '@/utils/stringutil';
 import { getEasternDateString, addDays } from '@/utils/dateutil';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/donki_card.png';
 const DEFAULT_TITLE = 'DONKI Report';
@@ -21,38 +21,49 @@ const API_PARAMS = {
 
 const NasaCardDonki: React.FC = () => {
   const { donkiData, setDonkiData } = useNasaCardData();
-  // Only fetch if donkiData is not present
-  const shouldFetch = !donkiData;
-  const { data, loading: apiLoading, error } = useNasaApi(API_ENDPOINT, API_PARAMS, { enabled: shouldFetch });
+  // donkiData is always an array now
+  const shouldFetch = donkiData.length === 0;
+  const { data, loading: apiLoading, error } = useApiWithBackoff(
+    () => nasaApiFetch(API_ENDPOINT, API_PARAMS),
+    [shouldFetch],
+    { enabled: shouldFetch }
+  );
   const [loading, setLoading] = useState(shouldFetch);
-  const [notification, setNotification] = useState<any>(donkiData);
+  const [notification, setNotification] = useState<any>(null);
   const [noRecentData, setNoRecentData] = useState(false);
 
   useEffect(() => {
-    if (donkiData) {
-      setNotification(donkiData);
+    if (donkiData.length > 0) {
+      // Use the first 'Report' type notification (case-insensitive)
+      const found = donkiData.find((notif: any) => notif && typeof notif.messageType === 'string' && notif.messageType.toLowerCase() === 'report');
+      setNotification(found || null);
       setLoading(false);
-      setNoRecentData(false);
+      setNoRecentData(!found);
       return;
     }
     if (!apiLoading && Array.isArray(data)) {
-      // Find the first notification with messageType 'report' (case-insensitive)
+      setDonkiData(data); // Store the full array in context
       const found = data.find((notif: any) => notif && typeof notif.messageType === 'string' && notif.messageType.toLowerCase() === 'report');
       setNotification(found || null);
-      setDonkiData(found || null);
       setNoRecentData(!found);
       setLoading(false);
     }
-    if (!apiLoading && !Array.isArray(data)) {
+    if (!apiLoading && error) {
       setNotification(null);
-      setDonkiData(null);
+      setNoRecentData(true);
+      setLoading(false);
+      // Don't setDonkiData([]) here, just show the error
+    }
+    if (!apiLoading && !Array.isArray(data) && !error) {
+      setNotification(null);
+      setDonkiData([]);
       setNoRecentData(true);
       setLoading(false);
     }
-    if (apiLoading && !donkiData) {
+    if (apiLoading && donkiData.length === 0) {
       setLoading(true);
     }
-  }, [data, apiLoading, donkiData, setDonkiData]);
+  }, [data, apiLoading, donkiData, setDonkiData, error]);
 
   const issueDate = notification && notification.messageIssueTime ? notification.messageIssueTime.split('T')[0] : '';
   const cardTitle = `${DEFAULT_TITLE}${issueDate ? ` (${issueDate})` : ''}`;

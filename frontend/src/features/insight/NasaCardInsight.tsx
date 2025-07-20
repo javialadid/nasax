@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useNasaApi } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/mars-weather.jpg';
 const DEFAULT_TITLE = 'InSight Mars Weather';
@@ -10,13 +11,38 @@ const API_ENDPOINT = 'insight_weather/';
 const API_PARAMS = { feedtype: 'json', ver: '1.0' };
 
 const NasaCardInsight: React.FC = () => {
-  const { data, loading, error } = useNasaApi(API_ENDPOINT, API_PARAMS);
-  // The API returns a sol-indexed object, get the latest sol
+  const { insightWeather, setInsightWeather, setInsightWeatherEmpty } = useNasaCardData();
+  const shouldFetch = !insightWeather.data && !insightWeather.empty;
+  const { data, loading: apiLoading, error } = useApiWithBackoff(
+    () => nasaApiFetch(API_ENDPOINT, API_PARAMS),
+    [shouldFetch],
+    { enabled: shouldFetch }
+  );
+  const [loading, setLoading] = useState(shouldFetch);
+
+  useEffect(() => {
+    if (insightWeather.data) {
+      setLoading(false);
+      return;
+    }
+    if (!apiLoading && data && data.sol_keys) {
+      setInsightWeather(data);
+      setLoading(false);
+    } else if (!apiLoading && error) {
+      setInsightWeatherEmpty();
+      setLoading(false);
+    } else if (apiLoading && !insightWeather.data) {
+      setLoading(true);
+    }
+  }, [data, apiLoading, error, insightWeather.data, setInsightWeather, setInsightWeatherEmpty]);
+
+  // Use context data for display
+  const weatherData = insightWeather.data;
   let latestSol = null;
   let latestData = null;
-  if (data && data.sol_keys && data.sol_keys.length > 0) {
-    latestSol = data.sol_keys[data.sol_keys.length - 1];
-    latestData = data[latestSol];
+  if (weatherData && weatherData.sol_keys && weatherData.sol_keys.length > 0) {
+    latestSol = weatherData.sol_keys[weatherData.sol_keys.length - 1];
+    latestData = weatherData[latestSol];
   }
   const cardSubtitle = latestData
     ? `Sol ${latestSol}: Temp ${latestData.AT?.av ?? '?'}°C, Wind ${latestData.HWS?.av ?? '?'} m/s, Pressure ${latestData.PRE?.av ?? '?'} Pa`
@@ -51,7 +77,7 @@ const NasaCardInsight: React.FC = () => {
         )}
         {error && !loading && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-red-400 text-xs px-3 py-2 text-center z-10">
-            <div className="font-semibold text-base truncate">{typeof error === 'object' && 'message' in error ? error.message : String(error)}</div>
+            <div className="font-semibold text-base truncate">{error.message || String(error)}</div>
           </div>
         )}
       </div>

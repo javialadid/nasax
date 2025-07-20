@@ -1,25 +1,60 @@
 import React, { Suspense, useMemo, useState, useEffect } from 'react';
-import { useNasaApi } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 import { prepareChartData } from '@/utils/marsWeatherUtils';
 import { CHART_COLORS } from '@/constants/marsWeather';
 import { InsightWeatherApiResponse } from '@/types/marsWeather';
 import ChartContainer from '@/components/ChartContainer';
-import MarsLineChart from '@/components/MarsLineChart';
+import MarsLineChart from '@/features/insight/MarsLineChart';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 
 const API_ENDPOINT = 'insight_weather/';
 const API_PARAMS = { feedtype: 'json', ver: '1.0' };
 
 const InsightView: React.FC = () => {
-  const { data, loading, error } = useNasaApi(API_ENDPOINT, API_PARAMS);
-  const { temp, tempMin, tempMax, wind, pressure, pressureMin, pressureMax } = useMemo(
-    () => prepareChartData(data as InsightWeatherApiResponse),
-    [data]
+  const { insightWeather, setInsightWeather, setInsightWeatherEmpty } = useNasaCardData();
+  const shouldFetch = !insightWeather.data && !insightWeather.empty;
+  const { data, loading: apiLoading, error } = useApiWithBackoff(
+    () => nasaApiFetch(API_ENDPOINT, API_PARAMS),
+    [shouldFetch],
+    { enabled: shouldFetch }
   );
+  const [loading, setLoading] = useState(shouldFetch);
+
+  useEffect(() => {
+    if (insightWeather.data) {
+      setLoading(false);
+      return;
+    }
+    if (!apiLoading && data && data.sol_keys) {
+      setInsightWeather(data);
+      setLoading(false);
+    } else if (!apiLoading && error) {
+      setInsightWeatherEmpty();
+      setLoading(false);
+    } else if (apiLoading && !insightWeather.data) {
+      setLoading(true);
+    }
+  }, [data, apiLoading, error, insightWeather.data, setInsightWeather, setInsightWeatherEmpty]);
+
+  // Use context data for charts
+  const weatherData = insightWeather.data;
+  const { temp, tempMin, tempMax, wind, pressure, pressureMin, pressureMax } = useMemo(
+    () => prepareChartData(weatherData as InsightWeatherApiResponse),
+    [weatherData]
+  );
+
+  if (error && !weatherData) {
+    return (
+      <div className="flex flex-col w-full max-w-5xl mx-auto min-h-0 h-full flex-1 py-2 px-2 gap-8 overflow-auto" style={{ maxHeight: '100vh' }}>
+        <div className="text-center text-red-500 text-lg">{error.message || String(error)}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto min-h-0 h-full flex-1 py-2 px-2 gap-8 overflow-auto" style={{ maxHeight: '100vh' }}>      
       {loading && <div className="text-center text-lg text-gray-400">Loading weather data...</div>}
-      {error && <div className="text-center text-red-500 text-lg">{typeof error === 'object' && 'message' in error ? error.message : String(error)}</div>}
+      {error && <div className="text-center text-red-500 text-lg">{error.message}</div>}
       {!loading && !error && (
         <>
           <Suspense fallback={<div className='h-70 flex items-center justify-center'>Loading chart...</div>}>

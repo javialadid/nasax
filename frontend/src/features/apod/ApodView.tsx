@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNasaApi } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 import Explanation from '@components/Explanation';
 import { getEasternDateString, formatDateString, clampDateToRange, daysBetween, addDays } from '@/utils/dateutil';
 import { useSearchParams } from 'react-router-dom';
 import SpinnerOverlay from '@components/SpinnerOverlay';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { getMaxDaysBackEpic } from '@/utils/env';
-import { useNasaCardData } from '@/NasaCardDataContext';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 import { getApiBaseUrl } from '@/utils/env';
+import ZoomModal from '@components/ZoomModal';
 
 // Logging utility for debugging
 const log = (message: string, data: any) => {
@@ -21,32 +22,6 @@ type ZoomModalProps = {
   title: string;
   onClose: () => void;
 };
-
-const ZoomModal = ({ imageUrl, title, onClose }: ZoomModalProps) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95">
-    <button
-      className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white z-50"
-      onClick={onClose}
-      title="Close"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-    <div className="w-full h-full flex items-center justify-center p-4">
-      <TransformWrapper>
-        <TransformComponent>
-          <img
-            src={imageUrl}
-            alt={title}
-            className="max-w-full max-h-full object-contain rounded-lg"
-            draggable={false}
-          />
-        </TransformComponent>
-      </TransformWrapper>
-    </div>
-  </div>
-);
 
 const ApodView = () => {
   const today = getEasternDateString();
@@ -63,50 +38,42 @@ const ApodView = () => {
     return initialDate;
   });
   const [showZoomModal, setShowZoomModal] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
 
   // Get APOD entry for the current date from context
   const apodEntry = apodByDate[currentDate];
 
-  // Fetch data only if not present in context
-  useEffect(() => {
-    if (apodEntry) return;
-    let isMounted = true;
-    const fetchData = async (date: string, backCount: number) => {
+  // Fetcher that tries currentDate, then previous days up to MAX_DAYS_BACK
+  const fetchApodWithBacktrack = async () => {
+    let date = currentDate;
+    for (let i = 0; i <= MAX_DAYS_BACK; i++) {
       try {
-        const res = await fetch(`${getApiBaseUrl()}/planetary/apod?date=${date}`);
-        const json = await res.json();
-        if (!json || !json.url) {
-          if (backCount < MAX_DAYS_BACK) {
-            const prevDate = addDays(date, -1);
-            if (isMounted) {
-              setCurrentDate(prevDate);
-              setRetryCount(count => count + 1);
-              setSearchParams({ date: prevDate }, { replace: true });
-            }
-          } else if (isMounted) {
-            setApodEmptyForDate(date);
-          }
-        } else if (isMounted) {
-          setApodDataForDate(date, json);
+        const data = await nasaApiFetch('planetary/apod', { date });
+        if (data && data.url) {
+          return { data, date };
         }
       } catch (e) {
-        if (backCount < MAX_DAYS_BACK) {
-          const prevDate = addDays(date, -1);
-          if (isMounted) {
-            setCurrentDate(prevDate);
-            setRetryCount(count => count + 1);
-            setSearchParams({ date: prevDate }, { replace: true });
-          }
-        } else if (isMounted) {
-          setApodEmptyForDate(date);
-        }
+        if (i === MAX_DAYS_BACK) throw e;
       }
-    };
-    fetchData(currentDate, retryCount);
-    return () => { isMounted = false; };
-  }, [apodEntry, currentDate, retryCount, setApodDataForDate, setApodEmptyForDate, setSearchParams]);
+      date = addDays(date, -1);
+    }
+    throw new Error('No APOD found for recent days');
+  };
+
+  const { data: fetched, loading, error } = useApiWithBackoff(fetchApodWithBacktrack, [currentDate], { delay: 1000, maxAttempts: 1, enabled: !apodEntry });
+
+  // Update context and URL when data or error changes
+  useEffect(() => {
+    if (!apodEntry && fetched) {
+      setApodDataForDate(fetched.date, fetched.data);
+      if (fetched.date !== currentDate) {
+        setCurrentDate(fetched.date);
+        setSearchParams({ date: fetched.date }, { replace: true });
+      }
+    } else if (!apodEntry && error && error.message === 'No APOD found for recent days') {
+      setApodEmptyForDate(currentDate);
+    }
+  }, [fetched, error, apodEntry, setApodDataForDate, setApodEmptyForDate, currentDate, setSearchParams]);
 
   // Sync currentDate with URL changes (e.g., back button)
   useEffect(() => {
@@ -114,7 +81,6 @@ const ApodView = () => {
     const newDate = urlDate ? clampDateToRange(urlDate, oldestAllowed, today) : today;
     if (newDate !== currentDate) {
       setCurrentDate(newDate);
-      setRetryCount(0); // Reset retry count on manual URL change
     }
   }, [searchParams, currentDate, oldestAllowed, today]);
 
@@ -141,10 +107,10 @@ const ApodView = () => {
   const imageUrl = data?.hdurl || data?.url;
 
   // Loading and error states
-  if (!apodEntry && retryCount === 0) {
+  if (loading || (!apodEntry && !error)) {
     return <SpinnerOverlay />;
   }
-  if (empty) {
+  if (empty || (error && error.message === 'No APOD found for recent days')) {
     return <div className="text-gray-400 text-center my-8">No APOD found for the last {MAX_DAYS_BACK} days.</div>;
   }
   if (!data?.title || !data?.url || !data?.explanation) {

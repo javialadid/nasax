@@ -1,11 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useNasaApi } from '@/hooks/useNasaApi';
+import { useNasaCardData } from '@/context/NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/epic_card_hd.png';
 const DEFAULT_TITLE = 'EPIC';
 const DEFAULT_SUBTITLE = 'Earth Polychromatic Imaging Camera';
 const DEFAULT_SECONDARY = 'Watch the earth rotating';
+
 const NasaCardEpic: React.FC = () => {
+  const { availableEpicDates, setAvailableEpicDates } = useNasaCardData();
+  const shouldFetch = availableEpicDates.length === 0;
+  const { data, loading, error } = useNasaApi('EPIC/api/natural/available', {}, { enabled: shouldFetch });
+
+  useEffect(() => {
+    if (shouldFetch && Array.isArray(data) && data.length > 0) {
+      setAvailableEpicDates(data);
+    }
+  }, [shouldFetch, data, setAvailableEpicDates]);
+
   return (
     <Link to="/epic" style={{ textDecoration: 'none' }}>
       <div

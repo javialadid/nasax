@@ -1,4 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
+
+// Transition duration constant
+const THUMBNAIL_TRANSITION_DURATION = 500; // ms
 
 interface CarouselThumbnailBarProps {
   sortedImages: string[];
@@ -38,27 +41,26 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
   // Track if a user-initiated scroll is happening (for touch devices)
   const userScrollActive = useRef(false);
 
+  // Memoize isTouchDevice
+  const isTouchDevice = useMemo(() => typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0), []);
+
   const startAutohideTimer = () => {
     if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
     thumbnailsTimeoutRef.current = setTimeout(() => {
       setShowThumbnailsBar(false);
       setIsUserInteracting(false);
       userScrollActive.current = false;
-      console.log('[CarouselThumbnailBar] Autohide: hiding bar, isUserInteracting=false');
     }, autohideTimeout);
-    console.log('[CarouselThumbnailBar] Autohide timer started/reset');
   };
   const handleUserInteractionStart = (source = 'unknown') => {
     setIsUserInteracting(true);
     setShowThumbnailsBar(true);
     startAutohideTimer();
     userScrollActive.current = true;
-    console.log(`[CarouselThumbnailBar] User interaction start (${source})`);
   };
   const handleUserInteractionEnd = (source = 'unknown') => {
     startAutohideTimer();
     userScrollActive.current = false;
-    console.log(`[CarouselThumbnailBar] User interaction end (${source})`);
   };
   const handleMouseEnter = () => handleUserInteractionStart('mouseenter');
   const handleMouseLeave = () => handleUserInteractionEnd('mouseleave');
@@ -78,13 +80,20 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
     };
   }, [showThumbnailsBar, isUserInteracting, autohideTimeout]);
 
+  // Clear autohide timer on unmount
+  useEffect(() => {
+    return () => {
+      if (thumbnailsTimeoutRef.current) clearTimeout(thumbnailsTimeoutRef.current);
+    };
+  }, []);
+
   // Only show bar on mount
   useEffect(() => {
     setShowThumbnailsBar(true);
   }, []);
 
   // Utility to detect touch device
-  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  // const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
   useEffect(() => {
     if (isTouchDevice) return; // Only attach pointer drag for non-touch devices
@@ -160,7 +169,6 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
         setTimeout(() => { userScrollActive.current = false; }, 100);
       } else {
         // Ignore programmatic scrolls
-        console.log('[CarouselThumbnailBar] Ignored programmatic scroll');
       }
     };
     el.addEventListener('scroll', handleScroll);
@@ -169,17 +177,22 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
     };
   }, [autohideTimeout, isTouchDevice]);
 
+  // Callback ref for buttons
+  const setButtonRef = useCallback((el: HTMLButtonElement | null, i: number) => {
+    if (el) buttonRefs.current[i] = el;
+  }, []);
+
   useEffect(() => {
     // When the bar collapses (showThumbnailsBar goes from true to false), scroll to current index
     if (prevShowThumbnailsBar.current && !showThumbnailsBar) {
-      // Wait for the opacity transition to finish (500ms)
+      // Wait for the opacity transition to finish
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       scrollTimeoutRef.current = setTimeout(() => {
         const btn = buttonRefs.current[currentIndex];
         if (btn) {
           btn.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
         }
-      }, 500);
+      }, THUMBNAIL_TRANSITION_DURATION);
     }
     prevShowThumbnailsBar.current = showThumbnailsBar;
     return () => {
@@ -221,7 +234,7 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
           zIndex: 30,
           opacity: showThumbnailsBar ? 1 : 0,
           pointerEvents: showThumbnailsBar ? 'auto' : 'none',
-          transition: 'opacity 0.5s',
+          transition: `opacity ${THUMBNAIL_TRANSITION_DURATION}ms`,
           cursor: 'grab',
         }}
         onMouseEnter={handleMouseEnter}
@@ -235,7 +248,7 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
         {sortedImages.map((url, i) => (
           <button
             key={i}
-            ref={el => { buttonRefs.current[i] = el; }}
+            ref={el => setButtonRef(el, i)}
             data-thumb-index={i}
             onClick={isTouchDevice ? () => onThumbnailSelect(i) : undefined}
             style={{
@@ -279,6 +292,7 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
                 display: 'block',
               }}
               draggable={false}
+              onError={() => onThumbnailSelect(i)}
             />
           </button>
         ))}

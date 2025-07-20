@@ -1,16 +1,18 @@
-import express, { Application } from 'express';
+import express, { Application, Request, Response } from 'express';
 import corsMiddleware from './middleware/cors';
 import nasaProxyRouter from './routes/nasaProxy';
 import donkiNotificationsMiddleware from './middleware/donkiNotifications';
 import cache from './services/cache';
+import nasaDirectRouter from './routes/nasaDirect';
 
 const app: Application = express();
 const PORT: number = Number(process.env.PORT) || 3000;
 
+
 app.use(corsMiddleware)
 
 // Healthcheck endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', uptime: process.uptime() });
 });
 
@@ -29,15 +31,18 @@ app.get('/metrics', (req, res) => {
   });
 });
 
-// Add DONKI notifications middleware before /api
-app.use(donkiNotificationsMiddleware);
+app.get('/favicon.ico', (req: Request, res: Response) => {
+  res.status(204).end()
+});
 
-// First step we just proxy NASA API, see if it's feasible.
-// enhancement options: 
-// * white list paths
-// * mapping exceptional requests if. 
-// TBD
-app.use('/api', nasaProxyRouter);
+if (process.env.USE_NASA_PROXY === 'true') {
+  // Add DONKI notifications middleware before /api
+  app.use(donkiNotificationsMiddleware);
+  app.use('/api', nasaProxyRouter);
+  console.warn(`Using NASA API proxy`)
+} else {
+  app.use('/api', nasaDirectRouter);  
+}
 
 app.listen(PORT, (): void => {
 	console.log(`Server is running on http://localhost:${PORT}`);

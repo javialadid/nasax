@@ -13,4 +13,5 @@ if (typeof global.TextDecoder === 'undefined') {
 jest.mock('./utils/env', () => ({
 	getApiBaseUrl: () => 'http://localhost:3000',
   getMaxDaysBackEpic: () => 7,
+  getGaMeasurementId: () => "asd",
 }));

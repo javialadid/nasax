@@ -1,22 +1,23 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 
 import DeepSpaceBackground from '@/components/DeepSpaceBackground';
-import ApodView from '@/components/views/ApodView';
-import EpicView from '@/components/views/EpicView';
-import DonkiNotificationsView from '@/components/views/DonkiView';
-import NasaRoversView from '@/components/views/RoversView';
+import ApodView from '@/features/apod/ApodView';
+import EpicView from '@/features/epic/EpicView';
+import DonkiNotificationsView from '@/features/donki/DonkiView';
+import NasaRoversView from '@/features/rovers/RoversView';
 
-import NasaCardApod from '@/components/NasaCardApod';
-import NasaCardDonki from '@/components/NasaCardDonki';
-import NasaCardEpic from '@/components/NasaCardEpic';
-import NasaRoversCard from '@/components/NasaRoversCard';
-import NasaCardInsight from '@/components/NasaCardInsight';
+import NasaCardApod from '@/features/apod/NasaCardApod';
+import NasaCardDonki from '@/features/donki/NasaCardDonki';
+import NasaCardEpic from '@/features/epic/NasaCardEpic';
+import NasaRoversCard from '@/features/rovers/NasaRoversCard';
+import NasaCardInsight from '@/features/insight/NasaCardInsight';
 
 import ScrollableView from '@/components/ScrollableView';
-import { NasaCardDataProvider } from '@/NasaCardDataContext';
+import { NasaCardDataProvider } from '@/context/NasaCardDataContext';
 import React, { Suspense } from 'react';
 
 import { useEffect } from 'react';
+import { getGaMeasurementId } from './utils/env';
 
 // Declare gtag on the window object for TypeScript
 declare global {
@@ -27,7 +28,7 @@ declare global {
 
 const logo = '/logo_nasax_alpha.png';
 
-const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+const GA_MEASUREMENT_ID = getGaMeasurementId();
 
 // only if we gave GA_MEASUREMENT_ID we send events
 function usePageViews() {
@@ -43,7 +44,7 @@ function usePageViews() {
   }, [location]);
 }
 
-const LazyInsightView = React.lazy(() => import('@/components/views/InsightView'));
+const LazyInsightView = React.lazy(() => import('@/features/insight/InsightView'));
 
 function App() {
   const location = useLocation();
