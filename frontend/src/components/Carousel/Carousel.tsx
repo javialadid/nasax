@@ -54,9 +54,27 @@ interface CarouselProps {
   thumbnailsAutohideTimeout?: number;
 }
 
+// Inline constants for styling
+const THUMBNAIL_BAR_HEIGHT = 128;
+const THUMBNAIL_BAR_Z_INDEX = 25;
+const ARROW_BUTTON_Z_INDEX = 550;
+
+// Interface for imperative handle
+export interface CarouselHandle {
+  next: () => void;
+  prev: () => void;
+  goToIndex: (idx: number) => void;
+  getCurrentIndex: () => number;
+  isPlaying: () => boolean;
+  play: () => void;
+  pause: () => void;
+  togglePlay: () => void;
+  getTotalImages: () => number;
+}
+
 const DEFAULT_CROP = 0;
 
-const Carousel = forwardRef<any, CarouselProps>(({
+const Carousel = forwardRef<CarouselHandle, CarouselProps>(({
   imageUrls = [],
   altTexts = [],
   order = 'asc',
@@ -88,6 +106,9 @@ const Carousel = forwardRef<any, CarouselProps>(({
   const [loadedImages, setLoadedImages] = useState<{ [url: string]: boolean }>({});
   const initialSpeed = useMemo(() => Math.round((playbackSpeedMin + playbackSpeedMax) / 2), [playbackSpeedMin, playbackSpeedMax]);
   const [playbackSpeed, setPlaybackSpeed] = useState(initialSpeed);
+
+  // Focus state for keyboard navigation
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     setIsPlaying(autoPlay);
@@ -145,6 +166,7 @@ const Carousel = forwardRef<any, CarouselProps>(({
     return sortedImages.every(url => loadedImages[url]);
   }, [loadedImages, sortedImages]);
 
+  // Refactored autoplay interval cleanup
   useEffect(() => {
     if (isPlaying && totalImages > 1 && allImagesLoaded) {
       intervalRef.current = setInterval(() => {
@@ -154,12 +176,12 @@ const Carousel = forwardRef<any, CarouselProps>(({
           setUncontrolledIndex(idx => (idx + 1) % totalImages);
         }
       }, playbackSpeed);
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
     }
-
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
   }, [isPlaying, totalImages, allImagesLoaded, playbackSpeed, controlledIndex, onIndexChange]);
 
@@ -175,8 +197,9 @@ const Carousel = forwardRef<any, CarouselProps>(({
     getTotalImages: () => totalImages,
   }));
 
-  // Keyboard navigation
+  // Keyboard navigation (scoped to focus)
   useEffect(() => {
+    if (!isFocused) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
         goPrev();
@@ -188,7 +211,7 @@ const Carousel = forwardRef<any, CarouselProps>(({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goPrev, goNext]);
+  }, [goPrev, goNext, isFocused]);
 
   if (totalImages === 0) {
     return (
@@ -213,11 +236,7 @@ const Carousel = forwardRef<any, CarouselProps>(({
 
   // Track which images failed
   const [errorImages, setErrorImages] = useState<{ [idx: number]: boolean }>({});
-
-  // --- Thumbnails autohide logic ---
-  // Remove handleThumbnailsMouseEnter, handleThumbnailsMouseLeave, handleThumbnailsFocus, handleThumbnailsBlur, handleThumbnailsTouchStart, handleThumbnailsTouchEnd, and related autohide logic from Carousel.tsx
-  // Only keep the onThumbnailSelect handler for click events
-  // ... existing code ...
+  
 
   // Handlers for thumbnail bar
   const handleThumbnailSelect = (idx: number) => {
@@ -228,6 +247,8 @@ const Carousel = forwardRef<any, CarouselProps>(({
     }
   };
 
+  // Remove handleThumbnailError and onThumbnailError prop
+
   return (
     <div
       className={`relative bg-black rounded-lg overflow-hidden w-full h-full ${className} group`}
@@ -237,6 +258,8 @@ const Carousel = forwardRef<any, CarouselProps>(({
       aria-label="Image carousel"
       aria-live="polite"
       role="region"
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
     >
       {/* Thumbnail Mosaic */}
       {showThumbnails && totalImages > 0 && (
@@ -254,8 +277,8 @@ const Carousel = forwardRef<any, CarouselProps>(({
         <div
           className="absolute left-0 top-0 w-full carousel-thumbnails-scrollbar"
           style={{
-            height: 128,
-            zIndex: 25,
+            height: THUMBNAIL_BAR_HEIGHT,
+            zIndex: THUMBNAIL_BAR_Z_INDEX,
             pointerEvents: 'auto',
             background: 'transparent',
             overflowY: 'hidden',
@@ -291,15 +314,17 @@ const Carousel = forwardRef<any, CarouselProps>(({
         imageClassName={imageClassName}
         FALLBACK_IMAGE={FALLBACK_IMAGE}
       />
+      {/* Navigation arrows must be rendered after CarouselMain to be on top */}
       {showArrows && (
         <>
           <button
             onClick={goPrev}
             disabled={totalImages <= 1}
-            className="z-250 absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-200/10 
+            className={`absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-200/10 
             hover:bg-gray-200/50 disabled:opacity-30 disabled:cursor-not-allowed text-white p-2 
-            rounded-full transition-all"
+            rounded-full transition-all`}
             aria-label="Previous image"            
+            style={{ zIndex: ARROW_BUTTON_Z_INDEX }}
           >
             <span style={{textShadow: '2px 2px 4px black'}}>{'<'}</span>
           </button>
@@ -307,10 +332,11 @@ const Carousel = forwardRef<any, CarouselProps>(({
           <button
             onClick={goNext}
             disabled={totalImages <= 1}
-            className="z-250 absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-200/10 
+            className={`absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-200/10 
             hover:bg-gray-200/50 disabled:opacity-30 disabled:cursor-not-allowed text-white p-2 
-            rounded-full transition-all"
+            rounded-full transition-all`}
             aria-label="Next image"
+            style={{ zIndex: ARROW_BUTTON_Z_INDEX }}
           >
             <span style={{textShadow: '2px 2px 4px black'}}>{'>'}</span>
           </button>

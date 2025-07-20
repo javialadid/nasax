@@ -30,6 +30,8 @@ interface NasaCardDataContextType {
   epicByDate: { [date: string]: EpicDateEntry };
   setEpicDataForDate: (date: string, data: any) => void;
   setEpicEmptyForDate: (date: string) => void;
+  availableEpicDates: string[];
+  setAvailableEpicDates: (dates: string[]) => void;
   roversData: RoversData[];
   setRoversData: (data: RoversData[]) => void;
   donkiData: DonkiData;
@@ -45,6 +47,7 @@ const NasaCardDataContext = createContext<NasaCardDataContextType | undefined>(u
 export const NasaCardDataProvider = ({ children }: { children: ReactNode }) => {
   const [apodByDate, setApodByDate] = useState<{ [date: string]: ApodDateEntry }>({});
   const [epicByDate, setEpicByDate] = useState<{ [date: string]: EpicDateEntry }>({});
+  const [availableEpicDates, setAvailableEpicDates] = useState<string[]>([]);
   const [roversData, setRoversData] = useState<RoversData[]>([]);
   const [donkiData, _setDonkiData] = useState<DonkiData>([]);
   const setDonkiData = (data: DonkiData) => {
@@ -96,7 +99,7 @@ export const NasaCardDataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <NasaCardDataContext.Provider value={{ apodByDate, setApodDataForDate, setApodEmptyForDate, epicByDate, setEpicDataForDate, setEpicEmptyForDate, roversData, setRoversData, donkiData, setDonkiData, insightWeather, setInsightWeather, setInsightWeatherEmpty, clearAll }}>
+    <NasaCardDataContext.Provider value={{ apodByDate, setApodDataForDate, setApodEmptyForDate, epicByDate, setEpicDataForDate, setEpicEmptyForDate, availableEpicDates, setAvailableEpicDates, roversData, setRoversData, donkiData, setDonkiData, insightWeather, setInsightWeather, setInsightWeatherEmpty, clearAll }}>
       {children}
     </NasaCardDataContext.Provider>
   );

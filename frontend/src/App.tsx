@@ -17,6 +17,7 @@ import { NasaCardDataProvider } from '@/context/NasaCardDataContext';
 import React, { Suspense } from 'react';
 
 import { useEffect } from 'react';
+import { getGaMeasurementId } from './utils/env';
 
 // Declare gtag on the window object for TypeScript
 declare global {
@@ -27,7 +28,7 @@ declare global {
 
 const logo = '/logo_nasax_alpha.png';
 
-const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+const GA_MEASUREMENT_ID = getGaMeasurementId();
 
 // only if we gave GA_MEASUREMENT_ID we send events
 function usePageViews() {

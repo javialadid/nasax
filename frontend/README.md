@@ -8,12 +8,12 @@ The idea is to showcase some NASA API content.
 Areas of focus:
 * Web performance 
 * User experience
-* Fluid design that works well in any screen size or orientation
+* Fluid design that works well in any screen size or orientation.
 * Maximizing picture content on screen
 
 ### Custom carousel 
 Shows sequences of pictures. It allows: 
-* Navigation 
+* Navigation (also with keyboard)
 * Thumbnails navigation with dragging scroll for desktop and mobile
 * Autoplay
 * Fullscreen with zoom and pinch
@@ -39,6 +39,12 @@ npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) to view the app in your browser.
+
+### Run tests
+
+```bash
+npm run test
+```
 
 ### Build for production
 

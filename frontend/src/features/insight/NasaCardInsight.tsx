@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useNasaApi } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 import { useNasaCardData } from '@/context/NasaCardDataContext';
 
 const DEFAULT_IMAGE = '/mars-weather.jpg';
@@ -13,7 +13,11 @@ const API_PARAMS = { feedtype: 'json', ver: '1.0' };
 const NasaCardInsight: React.FC = () => {
   const { insightWeather, setInsightWeather, setInsightWeatherEmpty } = useNasaCardData();
   const shouldFetch = !insightWeather.data && !insightWeather.empty;
-  const { data, loading: apiLoading, error } = useNasaApi(API_ENDPOINT, API_PARAMS, { enabled: shouldFetch });
+  const { data, loading: apiLoading, error } = useApiWithBackoff(
+    () => nasaApiFetch(API_ENDPOINT, API_PARAMS),
+    [shouldFetch],
+    { enabled: shouldFetch }
+  );
   const [loading, setLoading] = useState(shouldFetch);
 
   useEffect(() => {
@@ -73,7 +77,7 @@ const NasaCardInsight: React.FC = () => {
         )}
         {error && !loading && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-red-400 text-xs px-3 py-2 text-center z-10">
-            <div className="font-semibold text-base truncate">{error.message}</div>
+            <div className="font-semibold text-base truncate">{error.message || String(error)}</div>
           </div>
         )}
       </div>

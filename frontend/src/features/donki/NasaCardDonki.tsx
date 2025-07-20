@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useNasaApi } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 import { firstSentence, getChunkBetween } from '@/utils/stringutil';
 import { getEasternDateString, addDays } from '@/utils/dateutil';
 import { useNasaCardData } from '@/context/NasaCardDataContext';
@@ -23,7 +23,11 @@ const NasaCardDonki: React.FC = () => {
   const { donkiData, setDonkiData } = useNasaCardData();
   // donkiData is always an array now
   const shouldFetch = donkiData.length === 0;
-  const { data, loading: apiLoading, error } = useNasaApi(API_ENDPOINT, API_PARAMS, { enabled: shouldFetch });
+  const { data, loading: apiLoading, error } = useApiWithBackoff(
+    () => nasaApiFetch(API_ENDPOINT, API_PARAMS),
+    [shouldFetch],
+    { enabled: shouldFetch }
+  );
   const [loading, setLoading] = useState(shouldFetch);
   const [notification, setNotification] = useState<any>(null);
   const [noRecentData, setNoRecentData] = useState(false);

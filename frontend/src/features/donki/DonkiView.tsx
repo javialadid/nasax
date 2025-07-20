@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNasaApi } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 import { getEasternDateString, addDays } from '@/utils/dateutil';
 import DonkiAiReport from './DonkiAiReport';
 import SpinnerOverlay from '@components/SpinnerOverlay';
@@ -17,7 +17,11 @@ const API_PARAMS = {
 const DonkiNotificationsView: React.FC = () => {
   const { donkiData, setDonkiData } = useNasaCardData();
   const shouldFetch = donkiData.length === 0;
-  const { data, loading, error } = useNasaApi(API_ENDPOINT, API_PARAMS, { enabled: shouldFetch });
+  const { data, loading, error } = useApiWithBackoff(
+    () => nasaApiFetch(API_ENDPOINT, API_PARAMS),
+    [shouldFetch],
+    { enabled: shouldFetch }
+  );
 
   // On successful fetch, store in context
   useEffect(() => {

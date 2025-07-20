@@ -9,11 +9,6 @@ import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 const DEFAULT_IMAGE = '/default-apod.png'; // Place a default image in public/
 const DEFAULT_TITLE = 'Astronomy Picture of the Day';
 
-const CARD_IMG_WIDTH = 400;
-const CARD_IMG_HEIGHT = 300;
-
-const MAX_DAYS_BACK = getMaxDaysBackEpic();
-
 const NasaCardApod: React.FC = () => {
   const today = getEasternDateString();
   const { apodByDate, setApodDataForDate, setApodEmptyForDate } = useNasaCardData();
@@ -74,9 +69,7 @@ const NasaCardApod: React.FC = () => {
         )}
         <img
           src={noRecentData ? DEFAULT_IMAGE : image}
-          alt={ariaLabel}
-          width={CARD_IMG_WIDTH}
-          height={CARD_IMG_HEIGHT}
+          alt={ariaLabel}          
           className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
         />

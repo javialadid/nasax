@@ -1,5 +1,5 @@
 import React, { Suspense, useMemo, useState, useEffect } from 'react';
-import { useNasaApi } from '@/hooks/useNasaApi';
+import { useApiWithBackoff, nasaApiFetch } from '@/hooks/useNasaApi';
 import { prepareChartData } from '@/utils/marsWeatherUtils';
 import { CHART_COLORS } from '@/constants/marsWeather';
 import { InsightWeatherApiResponse } from '@/types/marsWeather';
@@ -13,7 +13,11 @@ const API_PARAMS = { feedtype: 'json', ver: '1.0' };
 const InsightView: React.FC = () => {
   const { insightWeather, setInsightWeather, setInsightWeatherEmpty } = useNasaCardData();
   const shouldFetch = !insightWeather.data && !insightWeather.empty;
-  const { data, loading: apiLoading, error } = useNasaApi(API_ENDPOINT, API_PARAMS, { enabled: shouldFetch });
+  const { data, loading: apiLoading, error } = useApiWithBackoff(
+    () => nasaApiFetch(API_ENDPOINT, API_PARAMS),
+    [shouldFetch],
+    { enabled: shouldFetch }
+  );
   const [loading, setLoading] = useState(shouldFetch);
 
   useEffect(() => {
@@ -38,6 +42,14 @@ const InsightView: React.FC = () => {
     () => prepareChartData(weatherData as InsightWeatherApiResponse),
     [weatherData]
   );
+
+  if (error && !weatherData) {
+    return (
+      <div className="flex flex-col w-full max-w-5xl mx-auto min-h-0 h-full flex-1 py-2 px-2 gap-8 overflow-auto" style={{ maxHeight: '100vh' }}>
+        <div className="text-center text-red-500 text-lg">{error.message || String(error)}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto min-h-0 h-full flex-1 py-2 px-2 gap-8 overflow-auto" style={{ maxHeight: '100vh' }}>      
