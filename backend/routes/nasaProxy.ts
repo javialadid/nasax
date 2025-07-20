@@ -1,9 +1,6 @@
 import { Router, Request, Response } from 'express';
 import axios, { AxiosResponse } from 'axios';
-import cache, { SimpleCache, cacheKeyFromUrl } from '../services/cache';
-import { processDonkiNotificationsResponse } from '../services/donkiNotifications';
-
-const NASA_API_URL = 'https://api.nasa.gov'
+import cache, { cacheKeyFromUrl } from '../services/cache';
 
 const ALLOWED_NASA_PATHS = [
   /^\/planetary\//,

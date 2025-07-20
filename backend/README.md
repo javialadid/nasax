@@ -33,7 +33,7 @@ NASA_API_KEY=your_nasa_api_key
 GROQ_API_KEY=your_groq_api_key
 GROQ_API_URL=https://api.groq.com/openai/v1/chat/completions
 GROQ_LLM_MODEL=llama-3.1-8b-instant
-CACHE_DURATION=86400 # (in seconds, default: 24h)
+APOD_CACHE_TTL=86400
 ORIGINS=http://localhost:3000 # (comma-separated, for CORS in production)
 ```
 
@@ -42,6 +42,8 @@ You can also run the server with environment variables set inline, for example:
 ```bash
 NASA_API_KEY=your_nasa_api_key GROQ_API_KEY=your_groq_api_key npm run dev
 ```
+#### Cache
+There are environment variables to control some of the cache TTLs parameters. See each route in [the nasa routes folder](routes/nasa/) for implementation details.
 
 ### Running the Server
 - **Development:**
