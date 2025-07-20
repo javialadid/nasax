@@ -4,7 +4,7 @@
  */
 const CACHE_NAME = 'epic-images-v1';
 const IMAGE_URL_PATTERN = /\/EPIC\/archive\/natural\/.*\.png$/;
-const MAX_CACHE_ITEMS = 50; // Maximum number of images to cache
+const MAX_CACHE_ITEMS = 100; // Maximum number of images to cache
 
 self.addEventListener('install', event => {
   console.log('[SW] Install event');

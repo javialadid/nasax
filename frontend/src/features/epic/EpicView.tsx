@@ -160,53 +160,28 @@ const EpicView: React.FC = () => {
     }).sort((a, b) => a.localeCompare(b)); // oldest to newest
   }, [availableEpicDates, latestAvailable, maxDaysBack]);
 
-  // Early return: loading available dates
-  if (availableEpicDates.length === 0 || loadingAvailableDates) {
-    return (
-      <div className="relative p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
-        <SpinnerOverlay />
-      </div>
-    );
-  }
+  // Mock data for loading placeholders
+  const mockEpicImage = {
+    image: '',
+    caption: '',
+    date: '',    
+  };
+  const mockEpicData = [mockEpicImage, mockEpicImage];
+
+  // Loading state
+  const isLoading = availableEpicDates.length === 0 || loadingAvailableDates || (!epicEntry && !empty);
 
   // Early return: error loading available dates
   if (errorAvailableDates && availableEpicDates.length === 0) {
     return (
-      <div className="relative p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
+      <div className="relative p-4 h-[calc(100vh-4rem)] flex min-h-0 min-w-0 portrait:flex-col portrait:items-stretch landscape:items-start">
         <div className="text-red-400 text-center my-8 w-full">
           Failed to load available EPIC dates.<br />
           <span className="text-gray-400 text-sm">{errorAvailableDates.message || String(errorAvailableDates)}</span>
         </div>
-      </div>
-    );
-  }
-
-  // Early return: date not available
-  if (!availableEpicDates.includes(currentDate)) {
-    return (
-      <div className="p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="text-gray-400 text-center my-8 w-full">
-          No EPIC images available for this date.
-        </div>
-      </div>
-    );
-  }
-
-  // Early return: loading image data
-  if (!epicEntry && !empty) {
-    return (
-      <div className="relative p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
-        <SpinnerOverlay />
-      </div>
-    );
-  }
-
-  // Early return: error or no images
-  if (empty || !data || !Array.isArray(data) || data.length === 0) {
-    return (
-      <div className="p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="text-gray-400 text-center my-8 w-full">
-          No EPIC images found for this date.
+        {/* Spinner Overlay */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <SpinnerOverlay />
         </div>
       </div>
     );
@@ -215,7 +190,7 @@ const EpicView: React.FC = () => {
   // Early return: out of bounds
   if (outOfBounds) {
     return (
-      <div className="p-4 h-[calc(100vh-4rem)] flex items-center justify-center">
+      <div className="relative p-4 h-[calc(100vh-4rem)] flex min-h-0 min-w-0 portrait:flex-col portrait:items-stretch landscape:items-start">
         <div className="text-gray-400 text-center my-8 w-full">
           The date you requested is too old and not available.<br />
           <br />
@@ -236,47 +211,85 @@ const EpicView: React.FC = () => {
             <span className="text-red-400">No available date in range.</span>
           )}
         </div>
+        {/* Spinner Overlay */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <SpinnerOverlay />
+        </div>
       </div>
     );
   }
 
-  // Happy path: images exist
+  // Use mock data if loading, otherwise real data
+  const displayData = isLoading ? mockEpicData : data;
+  const displayImageUrls = displayData && Array.isArray(displayData)
+    ? displayData.map(img => {
+        if (!img.date) return '';
+        const dateParts = img.date.split(' ');
+        const [year, month, day] = dateParts[0].split('-');
+        return img.image ? `https://epic.gsfc.nasa.gov/archive/natural/${year}/${month}/${day}/png/${img.image}.png` : '';
+      })
+    : [];
+  const displayCurrentImg = displayData && Array.isArray(displayData) && displayData[carouselIdx];
+
+  // Always render main layout, only show 'no data' message after loading is complete
   return (
-    <div className="p-4 h-[calc(100vh-4rem)] flex min-h-0 min-w-0 portrait:flex-col portrait:items-stretch landscape:items-start">
+    <div className="relative p-4 h-[calc(100vh-4rem)] flex min-h-0 min-w-0 portrait:flex-col portrait:items-stretch landscape:items-start">
       {/* Image Section */}
       <div
         className="portrait:w-full portrait:mb-4 portrait:max-h-[60vh] portrait:min-h-[60vh] portrait:flex-shrink-0           landscape:flex-shrink-0 landscape:max-w-[70vw] landscape:h-full landscape:mr-4 landscape:aspect-[4/3] "
       >
         <EpicImageSection
-          imageUrls={imageUrls}
+          imageUrls={displayImageUrls}
           carouselIdx={carouselIdx}
           setCarouselIdx={setCarouselIdx}
           autoPlay={autoPlay}
           setAutoPlay={setAutoPlay}
           showZoomModal={showZoomModal}
           setShowZoomModal={setShowZoomModal}
-          currentImg={currentImg}
+          currentImg={displayCurrentImg}
         />
       </div>
       {/* Metadata Section */}
       <EpicMetadataSection
-        currentDate={currentDate}                
+        currentDate={currentDate}
         setSearchParams={setSearchParams}
-        data={data}
+        data={displayData}
         carouselIdx={carouselIdx}
-        currentImg={currentImg}
+        currentImg={displayCurrentImg}
         allowedDates={allowedDates}
       />
-      {showZoomModal && currentImg && (
+      {showZoomModal && displayCurrentImg && (
         <ZoomModal
-          imageUrl={imageUrls[carouselIdx]}
-          title={currentImg.caption || currentImg.image}
+          imageUrl={displayImageUrls[carouselIdx]}
+          title={displayCurrentImg.caption || displayCurrentImg.image}
           onClose={() => setShowZoomModal(false)}
           onPrev={() => setCarouselIdx(idx => Math.max(0, idx - 1))}
-          onNext={() => setCarouselIdx(idx => Math.min(imageUrls.length - 1, idx + 1))}
+          onNext={() => setCarouselIdx(idx => Math.min(displayImageUrls.length - 1, idx + 1))}
           canPrev={carouselIdx > 0}
-          canNext={carouselIdx < imageUrls.length - 1}
+          canNext={carouselIdx < displayImageUrls.length - 1}
         />
+      )}
+      {/* Show spinner overlay if loading */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <SpinnerOverlay />
+        </div>
+      )}
+      {/* Show 'no data' message only after loading is complete and no data */}
+      {!isLoading && (empty || !data || !Array.isArray(data) || data.length === 0) && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-gray-400 text-center my-8 w-full bg-white/80 dark:bg-black/80 p-4 rounded">
+            No EPIC images found for this date.
+          </div>
+        </div>
+      )}
+      {/* Show 'date not available' message only after loading is complete and date is not in availableEpicDates */}
+      {!isLoading && availableEpicDates && !availableEpicDates.includes(currentDate) && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-gray-400 text-center my-8 w-full bg-white/80 dark:bg-black/80 p-4 rounded">
+            No EPIC images available for this date.
+          </div>
+        </div>
       )}
     </div>
   );

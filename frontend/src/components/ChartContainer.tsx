@@ -8,7 +8,7 @@ const ChartContainer: React.FC<{ children: React.ReactNode; title: string; icon?
       border: '2px solid #b97a56',
       boxShadow: '0 4px 32px #ff4e1d22',
       overflow: 'hidden',
-      minHeight: '320px', 
+      minHeight: '300px', 
       maxHeight: '600px', 
       height: '35vh',
       margin: '0',
