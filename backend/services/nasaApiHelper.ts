@@ -46,6 +46,7 @@ export async function handleRequestWithDateRules(
 
 // Helper for cache check/set
 export function respondWithCache<T>(res: Response, cache: { get: <T>(key: string) => T | undefined, set: <T>(key: string, value: T, ttl?: number) => void }, cacheKey: string, ttl: number, data?: T): boolean {
+  console.log(`[CACHE CHECK][${cacheKey}] Initiating cache response logic. TTL: ${ttl}s, `);
   if (data !== undefined) {
     console.log(`[CACHE MISS][${cacheKey}] Caching new data with TTL: ${ttl}s`);
     cache.set(cacheKey, data, ttl);

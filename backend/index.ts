@@ -45,7 +45,9 @@ if (process.env.USE_NASA_PROXY === 'true') {
 }
 
 app.listen(PORT, (): void => {
+  console.log(`=============================================`)
 	console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`=============================================`)
 });
 
 export default app;

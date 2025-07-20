@@ -16,8 +16,11 @@ import cache from '../../services/cache';
  * - DONKI_CACHE_TTL: default cache TTL (seconds, default: 86400)
  */
 const router = Router();
+const SIX_DAYS_SECONDS = 6 * 24 * 60 * 60 * 1000
+const MIN_DONKI_CACHE_TTL = 60*60
 
 router.get('/notifications', async (req: Request, res: Response) => {
+  
   const cacheKey = buildCacheKey(req, []); // No relevant query params for DONKI
   if (respondWithCache(res, cache, cacheKey, DONKI_CACHE_TTL_DEFAULT)) return;
   const params = { ...req.query, api_key: NASA_API_KEY };
@@ -35,7 +38,7 @@ router.get('/notifications', async (req: Request, res: Response) => {
           return new Date(a.messageIssueTime) > new Date(b.messageIssueTime) ? a : b;
         });
         const reportDate = new Date(latest.messageIssueTime);
-        const expireDate = new Date(reportDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+        const expireDate = new Date(reportDate.getTime() + SIX_DAYS_SECONDS);
         const { secondsUntilIsoDateTime } = require('../../services/date');
         const seconds = secondsUntilIsoDateTime(expireDate.toISOString());
         logDetails = {
@@ -44,7 +47,7 @@ router.get('/notifications', async (req: Request, res: Response) => {
           expireDate: expireDate.toISOString(),
           secondsUntilExpire: seconds,
         };
-        if (seconds > 60) {
+        if (seconds > MIN_DONKI_CACHE_TTL) {
           cacheSeconds = seconds;
         }
       }
