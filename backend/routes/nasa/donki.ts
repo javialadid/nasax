@@ -31,8 +31,10 @@ router.get('/notifications', async (req: Request, res: Response) => {
     const processed: any[] = await processDonkiNotificationsResponse(data);
     let cacheSeconds = DONKI_CACHE_TTL_DEFAULT;
     let logDetails: { found: boolean, reportDate?: string, expireDate?: string, secondsUntilExpire?: number } = { found: false };
+    let hasLLMResponse = false;
     if (Array.isArray(processed)) {
       const reports = processed.filter((item: any) => item.messageType === 'Report' && item.messageIssueTime);
+      hasLLMResponse = processed.some((item: any) => item.processedMessage);
       if (reports.length > 0) {
         const latest = reports.reduce((a: any, b: any) => {
           return new Date(a.messageIssueTime) > new Date(b.messageIssueTime) ? a : b;
@@ -52,8 +54,10 @@ router.get('/notifications', async (req: Request, res: Response) => {
         }
       }
     }
-    console.log(`[${new Date().toISOString()}] [DONKI] Cache TTL calculation:`, logDetails, 'Final TTL set:', cacheSeconds, 'seconds');
-    respondWithCache(res, cache, cacheKey, cacheSeconds, processed);
+    console.log(`[${new Date().toISOString()}] [DONKI] Cache TTL calculation:`, logDetails, 'Final TTL set:', cacheSeconds, 'seconds', 'LLM response found:', hasLLMResponse);
+    if (hasLLMResponse) {
+      respondWithCache(res, cache, cacheKey, cacheSeconds, processed);
+    }
     res.json(processed);
   } catch (err: any) {    
     if (err.response) {      
