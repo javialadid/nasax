@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { processDonkiNotificationsResponse } from '../../services/donkiNotifications';
-import { respondWithCache, buildCacheKey, DONKI_CACHE_TTL_DEFAULT, NASA_API_KEY } from '../../services/nasaApiHelper';
-import cache from '../../services/cache';
+import { respondWithCache, DONKI_CACHE_TTL_DEFAULT, NASA_API_KEY } from '../../services/nasaApiHelper';
+import { buildCacheKey } from '../../services/cache';
 
 /**
  * Route for NASA's DONKI notifications API.
@@ -22,7 +22,7 @@ const MIN_DONKI_CACHE_TTL = 60*60
 router.get('/notifications', async (req: Request, res: Response) => {
   
   const cacheKey = buildCacheKey(req, []); // No relevant query params for DONKI
-  if (respondWithCache(res, cache, cacheKey, DONKI_CACHE_TTL_DEFAULT)) return;
+  if (await respondWithCache(res, cacheKey, DONKI_CACHE_TTL_DEFAULT)) return;
   const params = { ...req.query, api_key: NASA_API_KEY };
   const url = 'https://api.nasa.gov/DONKI/notifications';
   console.log(`[${new Date().toISOString()}] [DONKI] NASA API request:`, url, params);
@@ -56,7 +56,7 @@ router.get('/notifications', async (req: Request, res: Response) => {
     }
     console.log(`[${new Date().toISOString()}] [DONKI] Cache TTL calculation:`, logDetails, 'Final TTL set:', cacheSeconds, 'seconds', 'LLM response found:', hasLLMResponse);
     if (hasLLMResponse) {
-      respondWithCache(res, cache, cacheKey, cacheSeconds, processed);
+      await respondWithCache(res, cacheKey, cacheSeconds, processed);
     }
     res.json(processed);
   } catch (err: any) {    

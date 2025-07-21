@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import cache from './cache';
 
 export async function handleRequestWithDateRules(
   req: Request,
@@ -45,15 +46,15 @@ export async function handleRequestWithDateRules(
 }
 
 // Helper for cache check/set
-export function respondWithCache<T>(res: Response, cache: { get: <T>(key: string) => T | undefined, set: <T>(key: string, value: T, ttl?: number) => void }, cacheKey: string, ttl: number, data?: T): boolean {
-  console.log(`[CACHE CHECK][${cacheKey}] Initiating cache response logic. TTL: ${ttl}s, `);
+export async function respondWithCache<T>(res: Response, cacheKey: string, ttl: number, data?: T): Promise<boolean> {
+  //console.log(`[CACHE CHECK][${cacheKey}] Initiating cache response logic. TTL: ${ttl}s, `);
   if (data !== undefined) {
     console.log(`[CACHE MISS][${cacheKey}] Caching new data with TTL: ${ttl}s`);
-    cache.set(cacheKey, data, ttl);
+    await cache.set(cacheKey, data, ttl);
     res.set('X-Cache', 'MISS');
     return false;
   }
-  const cached = cache.get<T>(cacheKey);
+  const cached = await cache.get<T>(cacheKey);
   if (cached) {
     console.log(`[CACHE HIT][${cacheKey}] Serving data from cache`);
     res.set('X-Cache', 'HIT');
@@ -63,18 +64,6 @@ export function respondWithCache<T>(res: Response, cache: { get: <T>(key: string
   }
   console.log(`[CACHE MISS][${cacheKey}] No cached data found`);
   return false;
-}
-
-// Helper to build a stable cache key: path + sorted relevant params
-export function buildCacheKey(req: Request, relevantParams: string[]): string {
-  const base = req.path;
-  const params: Record<string, string> = {};
-  for (const key of relevantParams) {
-    const value = (req.query[key] || (req.params && req.params[key])) as string | undefined;
-    if (value) params[key] = value;
-  }
-  const paramString = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
-  return paramString ? `${base}?${paramString}` : base;
 }
 
 export const NASA_API_KEY = process.env.NASA_API_KEY || '';

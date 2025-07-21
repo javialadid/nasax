@@ -77,7 +77,7 @@ router.use(async (req: Request, res: Response) => {
     let cacheKey: string | undefined = undefined;
     if (!skipCache) {
       cacheKey = cacheKeyFromUrl(nasaUrl);
-      const cached = cache.get<Buffer>(cacheKey);
+      const cached = await cache.get<Buffer>(cacheKey);
       if (cached) {
         console.debug('Cached response');
         res.setHeader('X-Cache', 'HIT');
