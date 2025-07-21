@@ -21,7 +21,7 @@ export default function cacheMiddleware() {
     const cacheKey = cacheKeyFromUrl(req.originalUrl);
     const rule = getCacheRule(req.originalUrl);
     const ttl = rule ? rule.ttl : defaultTTL;
-    const cached = cache.get<Buffer>(cacheKey);
+    const cached = await cache.get<Buffer>(cacheKey);
     if (cached) {
       res.setHeader('X-Cache', 'HIT');
       res.setHeader('Content-Type', 'application/json');

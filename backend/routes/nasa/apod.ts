@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { query, validationResult } from 'express-validator';
-import { handleRequestWithDateRules, respondWithCache, buildCacheKey, APOD_CACHE_TTL, APOD_404_MIN_TTL, NASA_API_KEY } from '../../services/nasaApiHelper';
-import cache from '../../services/cache';
+import { handleRequestWithDateRules, respondWithCache, APOD_CACHE_TTL, APOD_404_MIN_TTL, NASA_API_KEY } from '../../services/nasaApiHelper';
+import { buildCacheKey } from '../../services/cache';
 
 const router = Router();
 /**
@@ -25,7 +25,7 @@ router.get(
   ],
   async (req: Request, res: Response) => {
     const cacheKey = buildCacheKey(req, ['date']);
-    if (respondWithCache(res, cache, cacheKey, APOD_CACHE_TTL)) return;
+    if (await respondWithCache(res, cacheKey, APOD_CACHE_TTL)) return;
     const params = { date: req.query.date, api_key: NASA_API_KEY };
     const url = 'https://api.nasa.gov/planetary/apod';
     console.log(`[${new Date().toISOString()}] [APOD] NASA API request:`, url, params);
@@ -45,7 +45,7 @@ router.get(
       APOD_404_MIN_TTL, // min404ttl: env or 1 hour
       async () => {
         const { data } = await axios.get(url, { params });
-        respondWithCache(res, cache, cacheKey, APOD_CACHE_TTL, data);
+        await respondWithCache(res, cacheKey, APOD_CACHE_TTL, data);
         return data;
       }
     );
