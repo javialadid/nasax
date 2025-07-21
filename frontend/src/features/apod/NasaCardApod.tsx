@@ -74,9 +74,9 @@ const NasaCardApod: React.FC = () => {
           loading="eager"
         />
         {/* Always show the default title at the top */}
-        <div className="absolute top-0 left-0 w-full bg-black/60 text-white text-lg font-semibold px-3 py-2 text-center truncate z-10">
+        <h2 className="absolute top-0 left-0 w-full bg-black/60 text-white text-lg font-semibold px-3 py-2 text-center truncate z-0">
           {DEFAULT_TITLE}
-        </div>
+        </h2>
         {/* When data is loaded, show API title and first sentence at the bottom */}
         {apodEntry && apodEntry.data && !noRecentData && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">

@@ -98,9 +98,9 @@ const NasaCardDonki: React.FC = () => {
           loading="eager"
         />
         {/* Always show the default title at the top */}
-        <div className="absolute top-0 left-0 w-full bg-black/60 text-white text-lg font-semibold px-3 py-2 text-center truncate z-10">
+        <h2 className="absolute top-0 left-0 w-full bg-black/60 text-white text-lg font-semibold px-3 py-2 text-center truncate z-0">
           {cardTitle}
-        </div>
+        </h2>
         {/* When data is loaded, show notification type and summary at the bottom */}
         {notification && !noRecentData && (
           <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">

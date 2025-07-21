@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "NasaX",
+  "name": "NasaX – Explore NASA API Data, Images, and Missions",
+  "description": "Explore NASA's API data, images, and missions with NasaX. Discover space like never before!",
   "icons": [
     {
       "src": "logo192.png",
