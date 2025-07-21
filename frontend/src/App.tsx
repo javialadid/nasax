@@ -18,6 +18,7 @@ import React, { Suspense } from 'react';
 
 import { useEffect } from 'react';
 import { getGaMeasurementId } from './utils/env';
+import NotFound from '@/components/NotFound';
 
 // Declare gtag on the window object for TypeScript
 declare global {
@@ -91,8 +92,15 @@ function App() {
             </div>
             {/* Centered navigation context */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-              <h1 className="text-sm sm:text-lg font-semibold text-white/90 landscape:text-xs sm:landscape:text-base">
-              {getNavLabel(location.pathname)}</h1>
+              {location.pathname === '/' ? (
+                <h1 className="text-sm sm:text-lg font-semibold text-white/90 landscape:text-xs sm:landscape:text-base">
+                  {getNavLabel(location.pathname)}
+                </h1>
+              ) : (
+                <span className="text-sm sm:text-lg font-semibold text-white/90 landscape:text-xs sm:landscape:text-base">
+                  {getNavLabel(location.pathname)}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2 sm:gap-4 z-1500">
               {/* Dropdown menu for navigation */}
@@ -158,6 +166,7 @@ function App() {
                   <LazyInsightView />
                 </Suspense>
               } />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
         </div>    
