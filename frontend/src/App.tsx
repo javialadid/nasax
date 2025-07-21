@@ -78,7 +78,7 @@ function App() {
       <div className="w-full text-[var(--color-text)] z-10 overflow-hidden flex flex-col h-screen min-h-0">
           {/* Top Pane */}
           <nav className="w-full h-12 sm:h-14 flex items-center justify-between px-2 sm:px-6 
-          bg-transparent z-10 shadow-md relative" style={{backdropFilter: 'blur(2px)'}}>
+          bg-transparent z-[2500] shadow-md relative" style={{backdropFilter: 'blur(2px)'}}>
             <div className="flex items-center gap-2 sm:gap-3 h-full">
               <Link to="/" className="flex items-center gap-2 sm:gap-3 h-full focus:outline-none lg:mt-3">
                 <img
@@ -102,7 +102,7 @@ function App() {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 z-1500">
+            <div className="flex items-center gap-2 sm:gap-4 ">
               {/* Dropdown menu for navigation */}
               <div className="relative">
                 <button
