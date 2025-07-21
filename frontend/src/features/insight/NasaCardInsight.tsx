@@ -64,9 +64,9 @@ const NasaCardInsight: React.FC = () => {
           className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
         />
-        <div className="absolute top-0 left-0 w-full bg-black/60 text-white text-lg font-semibold px-3 py-2 text-center truncate z-10">
+        <h2 className="absolute top-0 left-0 w-full bg-black/60 text-white text-lg font-semibold px-3 py-2 text-center truncate z-0">
           {DEFAULT_TITLE}
-        </div>
+        </h2>
         <div className="absolute bottom-0 left-0 w-full bg-black/70 text-gray-100 text-xs px-3 py-2 text-center z-10">
           <div className="text-xs text-gray-300 mt-1">{cardSubtitle}</div>
         </div>

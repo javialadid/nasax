@@ -57,6 +57,20 @@ function App() {
     if (pathname === '/') return '';    
     return '';
   }
+  const [showDropdown, setShowDropdown] = React.useState(false);
+  React.useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (!(e.target as HTMLElement).closest('#explore-menu-button')) {
+        setShowDropdown(false);
+      }
+    }
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClick);
+    } else {
+      document.removeEventListener('mousedown', handleClick);
+    }
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showDropdown]);
   return (    
     <NasaCardDataProvider>
       <DeepSpaceBackground />
@@ -80,13 +94,36 @@ function App() {
               <span className="text-sm sm:text-lg font-semibold text-white/90 landscape:text-xs sm:landscape:text-base">
               {getNavLabel(location.pathname)}</span>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* Dropdown menus will go here */}
-              <div className="w-16 sm:w-24 h-7 sm:h-8 bg-gray-700/30 rounded text-xs sm:text-sm flex items-center justify-center text-gray-300 cursor-pointer landscape:w-12 sm:landscape:w-16 landscape:h-6 sm:landscape:h-7">
-                  <Link to="/" className="flex items-center gap-2 sm:gap-3 h-full focus:outline-none">
-                Home
-                </Link>
-              </div>            
+            <div className="flex items-center gap-2 sm:gap-4 z-1500">
+              {/* Dropdown menu for navigation */}
+              <div className="relative">
+                <button
+                  className="w-24 h-8 bg-gray-700/30 rounded text-xs sm:text-sm flex items-center justify-center text-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  onClick={() => setShowDropdown((prev) => !prev)}
+                  aria-haspopup="true"
+                  aria-expanded={showDropdown ? 'true' : 'false'}
+                  id="explore-menu-button"
+                  type="button"
+                >
+                  Explore
+                  <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {showDropdown && (
+                  <div
+                    className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded shadow-lg z-[2000]"
+                    role="menu"
+                    aria-orientation="vertical"
+                    aria-labelledby="explore-menu-button"
+                  >
+                    <Link to="/" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>Home</Link>
+                    <Link to="/apod" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>Astronomy Picture of the Day</Link>
+                    <Link to="/epic" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>EPIC Earth Images</Link>
+                    <Link to="/donki" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>DONKI Space Weather</Link>
+                    <Link to="/rovers" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>Mars Rovers</Link>
+                    <Link to="/insight" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>InSight Mars Weather</Link>
+                  </div>
+                )}
+              </div>
             </div>
           </nav>
           {/* Main Content */}
@@ -97,13 +134,17 @@ function App() {
             <Routes>
               <Route path="/" element={
                 <ScrollableView className="flex  justify-center">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 w-full max-w-5xl py-8">
-                    <NasaCardApod/>
-                    <NasaCardEpic />
-                    <NasaCardDonki />
-                    <NasaRoversCard />                  
-                    <NasaCardInsight />                                      
-                    <div className="hidden sm:block" />
+                  <div className="w-full max-w-5xl py-8">
+                    <h1 className="text-xl font-bold mb-8 text-center">Welcome to NasaX – Explore NASA API Data, Images, and Missions</h1>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-12">
+                      <NasaCardApod/>
+                      <NasaCardEpic />
+                      <NasaCardDonki />
+                      <NasaRoversCard />                  
+                      <NasaCardInsight />                                      
+                      <div className="hidden sm:block" />
+                    </div>
                   </div>
                 </ScrollableView>
               } />
