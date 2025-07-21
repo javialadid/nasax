@@ -1,6 +1,6 @@
 import { createClient, RedisClientType } from 'redis';
 import NodeCache from 'node-cache';
-import { Request } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 const cacheTTL = parseInt(process.env.CACHE_DURATION || '', 10) || (24 * 60 * 60);
 const redisUrl = process.env.REDIS_URL;
@@ -14,8 +14,17 @@ export interface SimpleCache {
 
 let cache: SimpleCache;
 
+// This is here to help other parts of code to learn if redis is ready.
+// Like the cache middleware to wait for redis connection to be ready on cold starts (serverless)
+let redisReadyPromise: Promise<void> | undefined = undefined;
+
+function logWithTime(msg: string) {
+  const now = new Date().toISOString().replace('T', ' ').slice(0, 23);
+  console.log(`[${now}] ${msg}`);
+}
+
 if (redisUrl) {
-  console.log('[CACHE] REDIS_URL detected, initializing Redis cache.');
+  logWithTime('[CACHE] REDIS_URL detected, initializing Redis cache.');
   let client: RedisClientType | undefined;
   let isConnected = false;
   
@@ -28,7 +37,7 @@ if (redisUrl) {
     database: redisDb, // Add database selection
     reconnectStrategy: (retries: number) => {
       if (retries > 10) {
-        console.log('[CACHE] Too many retries, Redis connection terminated.');
+        logWithTime('[CACHE] Too many retries, Redis connection terminated.');
         return new Error('Too many retries.');
       }
       return Math.min(retries * 50, 500);
@@ -37,16 +46,19 @@ if (redisUrl) {
 
   client = createClient(clientOptions);
 
-  client.on('connect', () => console.log('[CACHE] Connecting to Redis...'));
-  client.on('ready', () => {
-    isConnected = true;
-    console.log('[CACHE] Redis connected.');
+  client.on('connect', () => logWithTime('[CACHE] Connecting to Redis...'));
+  redisReadyPromise = new Promise<void>((resolve) => {
+    client!.on('ready', () => {
+      isConnected = true;
+      resolve();
+      logWithTime('[CACHE] Redis connected.');
+    });
   });
   client.on('end', () => {
     isConnected = false;
-    console.log('[CACHE] Redis connection closed.');
+    logWithTime('[CACHE] Redis connection closed.');
   });
-  client.on('error', (err) => console.error('[CACHE] Redis Client Error', err));
+  client.on('error', (err) => logWithTime(`[CACHE] Redis Client Error: ${err}`));
 
   client.connect().catch(console.error);
 
@@ -129,4 +141,21 @@ export function cacheKeyFromUrl(url: string): string {
   }
 }
 
+function redisReadyMiddleware(timeoutMs?: number) {
+  const ms = timeoutMs ?? (parseInt(process.env.REDIS_READY_TIMEOUT_MS || '', 10) || 1000);
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!redisReadyPromise) return next();
+    let timedOut = false;
+    await Promise.race([
+      redisReadyPromise,
+      new Promise((resolve) => setTimeout(() => { timedOut = true; resolve(undefined); }, ms))
+    ]);
+    if (timedOut) {
+      console.warn(`[CACHE] Redis not ready after ${ms}ms, proceeding with request.`);
+    }
+    next();
+  };
+}
+
 export default cache;
+export { redisReadyPromise, redisReadyMiddleware };
