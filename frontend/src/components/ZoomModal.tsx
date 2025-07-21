@@ -33,9 +33,9 @@ const ZoomModal: React.FC<ZoomModalProps> = ({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 max-h-screen max-h-[100vh]">
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black bg-opacity-95 max-h-screen max-h-[100vh]">
       <button
-        className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white z-50"
+        className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white z-[3000]"
         onClick={onClose}
         title="Close"
       >
@@ -45,7 +45,7 @@ const ZoomModal: React.FC<ZoomModalProps> = ({
       </button>
       {onPrev && (
         <button
-          className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 hover:bg-black/80 rounded-full text-white z-50 text-3xl disabled:opacity-40"
+          className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 hover:bg-black/80 rounded-full text-white z-[3000] text-3xl disabled:opacity-40"
           onClick={onPrev}
           disabled={!canPrev}
           aria-label="Previous image"
@@ -57,7 +57,7 @@ const ZoomModal: React.FC<ZoomModalProps> = ({
       )}
       {onNext && (
         <button
-          className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 hover:bg-black/80 rounded-full text-white z-50 text-3xl disabled:opacity-40"
+          className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 hover:bg-black/80 rounded-full text-white z-[3000] text-3xl disabled:opacity-40"
           onClick={onNext}
           disabled={!canNext}
           aria-label="Next image"
