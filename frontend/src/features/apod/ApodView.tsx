@@ -118,13 +118,13 @@ const ApodView = () => {
   }
 
   return (
-    <div className="p-4 h-[calc(100vh-4rem)] flex
+    <div className="p-1 h-[calc(100vh-4rem)] flex
     portrait:flex-col portrait:items-stretch 
     landscape:items-start">
       {/* Image Section */}
       <div
         className="
-          portrait:w-full portrait:mb-4 portrait:max-h-[60vh] portrait:flex-shrink-0
+          portrait:w-full portrait:mb-1 portrait:max-h-[60vh] portrait:flex-shrink-0
           landscape:flex-shrink-0 landscape:max-w-[70vw] landscape:h-full landscape:mr-4
         "
         
@@ -170,7 +170,7 @@ const ApodView = () => {
         style={{ verticalAlign: 'top' }}
       >
         {/* Navigation Buttons and Title Row */}
-        <div className="flex flex-row items-center gap-2 mb-4 justify-center w-full">
+        <div className="flex flex-row items-center gap-2 justify-center w-full">
           <button
             onClick={handlePrev}
             disabled={!canGoPrev}
@@ -193,8 +193,8 @@ const ApodView = () => {
             </svg>
           </button>
         </div>
-        <div className="text-gray-300 mb-2 flex flex-wrap items-center gap-4 justify-center text-center">
-          <div><span className="pl-2 font-semibold text-blue-200">Date:</span> {formatDateString(currentDate)}</div>
+        <div className="text-gray-300  flex flex-wrap items-center gap-4 justify-center text-center">
+          <div className="text-xs"> {formatDateString(currentDate)}</div>
           {data.copyright && (
             <div className="flex items-center">
               <span className="font-semibold text-blue-200">©</span>
