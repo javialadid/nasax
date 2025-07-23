@@ -275,7 +275,7 @@ const CarouselThumbnailBar: React.FC<CarouselThumbnailBarProps> = ({
             aria-current={currentIndex === i}
           >
             <img
-              src={errorImages[i] ? '/fallback.svg' : url}
+              src={errorImages[i] ? '/fallback.svg' : (url || undefined)}
               alt={sortedAlts[i] || `Thumbnail ${i + 1}`}
               data-thumb-index={i}
               style={{

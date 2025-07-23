@@ -66,11 +66,11 @@ function App() {
       }
     }
     if (showDropdown) {
-      document.addEventListener('mousedown', handleClick);
+      document.addEventListener('click', handleClick);
     } else {
-      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('click', handleClick);
     }
-    return () => document.removeEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('click', handleClick);
   }, [showDropdown]);
   return (    
     <NasaCardDataProvider>
@@ -123,12 +123,12 @@ function App() {
                     aria-orientation="vertical"
                     aria-labelledby="explore-menu-button"
                   >
-                    <Link to="/" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>Home</Link>
-                    <Link to="/apod" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>Astronomy Picture of the Day</Link>
-                    <Link to="/epic" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>EPIC Earth Images</Link>
-                    <Link to="/donki" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>DONKI Space Weather</Link>
-                    <Link to="/rovers" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>Mars Rovers</Link>
-                    <Link to="/insight" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => setShowDropdown(false)}>InSight Mars Weather</Link>
+                    <Link to="/" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => { console.log('Navigating to /'); setShowDropdown(false); }}>Home</Link>
+                    <Link to="/apod" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => { console.log('Navigating to /apod'); setShowDropdown(false); }}>Astronomy Picture of the Day</Link>
+                    <Link to="/epic" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => { console.log('Navigating to /epic'); setShowDropdown(false); }}>EPIC Earth Images</Link>
+                    <Link to="/donki" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => { console.log('Navigating to /donki'); setShowDropdown(false); }}>DONKI Space Weather</Link>
+                    <Link to="/rovers" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => { console.log('Navigating to /rovers'); setShowDropdown(false); }}>Mars Rovers</Link>
+                    <Link to="/insight" className="block px-4 py-2 text-gray-200 hover:bg-blue-600 hover:text-white" role="menuitem" onClick={() => { console.log('Navigating to /insight'); setShowDropdown(false); }}>InSight Mars Weather</Link>
                   </div>
                 )}
               </div>

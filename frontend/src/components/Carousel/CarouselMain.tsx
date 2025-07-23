@@ -85,26 +85,28 @@ const CarouselMain: React.FC<CarouselMainProps> = ({
             aria-roledescription="slide"
             aria-label={`Image ${i + 1} of ${totalImages}`}
           >
-            <img
-              src={errorImages[i] ? FALLBACK_IMAGE : url}
-              alt={sortedAlts[i] || `Image ${i + 1}`}
-              className={`object-${imageFit} ${imageClassName}`}
-              style={cropImageStyle}
-              draggable={false}
-              onLoad={() => {
-                setLoadedImages(prev => ({ ...prev, [url]: true }));
-              }}
-              onClick={e => {
-                if (typeof onImageClick === 'function') onImageClick(i);
-              }}
-              onError={e => {
-                if (onImageError) {
-                  onImageError(e, i);
-                } else {
-                  // fallback: do nothing, errorImages should be managed by parent
-                }
-              }}
-            />
+            {(errorImages[i] || url) && (
+              <img
+                src={errorImages[i] ? FALLBACK_IMAGE : url}
+                alt={sortedAlts[i] || `Image ${i + 1}`}
+                className={`object-${imageFit} ${imageClassName}`}
+                style={cropImageStyle}
+                draggable={false}
+                onLoad={() => {
+                  setLoadedImages(prev => ({ ...prev, [url]: true }));
+                }}
+                onClick={e => {
+                  if (typeof onImageClick === 'function') onImageClick(i);
+                }}
+                onError={e => {
+                  if (onImageError) {
+                    onImageError(e, i);
+                  } else {
+                    // fallback: do nothing, errorImages should be managed by parent
+                  }
+                }}
+              />
+            )}
           </div>
         );
       })}
